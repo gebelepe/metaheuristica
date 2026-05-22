@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<style>
+    html { 
+      margin: 20px; padding: 0;
+      -webkit-background-size: cover;
+      -moz-background-size: cover;
+      -o-background-size: cover;
+      background-size: cover;
+    }
+
+    .floatingelement {
+        position: absolute;
+        top: 150px;
+        left: 50%;
+        margin-right: -50%;
+        transform: translate(-50%, 0%);
+        padding:20px;
+        background-color: #f9f9fb;
+        color: #555555;
+        font-weight: bold;
+        width:46%;
+        min-width: 400px;
+        border-radius: 20px;
+    }
+    table {
+        margin:0 auto;
+    }
+
+    a {
+        font-size:18px;
+        }
+    div {
+        text-align: center;
+        font-family: "Quicksand", serif;
+        font-weight:120;
+        font-size: normal;
+        font-style:normal;
+        }
+    
+    p {
+        text-align: center;
+        font-family: "Quicksand", serif;
+        font-weight:150;
+        font-size: larger;
+        font-style:normal;
+        }
+
+    strong {
+        text-align: center;
+        font-family: "Quicksand", serif;
+        font-weight:100;
+        font-size: normal;
+        font-style:normal;
+        }
+    
+    nav {
+        z-index: 1000;
+    }
+
+
+    nav.navbar.custom-navbar {
+    position: fixed !important;      /* keeps it pinned */
+    top: 20px;             /* floats 20px below the top */
+    left: 20px;            /* floats 20px from the left */
+    right: 20px;           /* floats 20px from the right */
+    border-radius: 10px;   /* rounded corners for floating look */
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15); /* subtle shadow */
+    z-index: 1000;         /* ensures it stays above content */
+    }
+
+    
+</style>
+
+
+
+<html>
+    <head>
+        <!-- Fuentes de Google -->
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300..700&display=swap" rel="stylesheet">
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <!-- Bootstrap -->
+        <link
+            rel="stylesheet"
+            href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+            integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh"
+            crossorigin="anonymous"
+        />
+        <link
+            rel="stylesheet"
+            href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css"
+            crossorigin="anonymous"
+        />
+
+        <title>{% block title %}Base{% endblock %}</title>
+    </head>
+    <body>
+        <!-- Barra de Navegacion-->
+        <nav class="navbar navbar-expand-lg navbar-light bg-light custom-navbar">
+            <button
+                class="navbar-toggler"
+                type="button"
+                data-toggle="collapse"
+                data-target="#navbar"
+            >
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbar">
+                <div class="navbar-nav">
+                    <a class="navbar-brand" href="/">
+                        
+                        <img src="static/plant.png" alt="" style="padding-left:10px; height:48px;">
+                    </a>
+                </div>
+
+                <div class="navbar-nav">
+                    <a class="nav-item nav-link" id="home" style="font-size:20px;font-family:'Quicksand';" href="/">Algoritmos Metaheuristicos</a>
+                </div>
+                </div>
+            </div>
+        
+        </nav> 
+        
+        
+        <div class="container">
+            {% block content %}{% endblock %}
+        </div>
+        
+        <script
+            src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
+            integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
+            crossorigin="anonymous"
+        ></script>
+        <script
+            src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
+            integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+            crossorigin="anonymous"
+        ></script>
+        <script
+            src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
+            integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+            crossorigin="anonymous"
+        ></script>
+        <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+        <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    </body>
+</html>
