@@ -21,6 +21,7 @@
         <option value="PSO">Enjambre de Partículas (PSO)</option>
         <option value="AIS">Sistema Inmune Artificial (AIS)</option>
         <option value="DE">Diferencial Evolutivo (DE)</option>
+        <option value="MFO">Polilla-Llama (MFO)</option> </select>
       </select>
     </div>
 
@@ -28,7 +29,7 @@
   <label class="form-label">Tipo de Problema</label>
   <select class="form-select" id="problem_type" name="problem_type" onchange="updateUIForProblemType(this.value)">
     <option value="function">Optimización de Función</option>
-    <option value="tsp">Agente Viajero (TSP)</option>
+    <option value="tsp">Problema del Viajante (TSP)</option>
   </select>
 </div>
 
@@ -164,8 +165,8 @@
       paramsContainer.innerHTML = `
         <h4 class="mt-4">Parámetros PSO</h4>
         <div class="mb-3"><label class="form-label">Número de partículas</label><input type="number" class="form-control" name="pso_particles" value="50"></div>
-        <div class="mb-3"><label class="form-label">Coeficiente cognitivo (c1)</label><input type="number" step="0.1" class="form-control" name="pso_c1" value="1.5"></div>
-        <div class="mb-3"><label class="form-label">Coeficiente social (c2)</label><input type="number" step="0.1" class="form-control" name="pso_c2" value="1.5"></div>
+        <div class="mb-3"><label class="form-label">Coeficiente cognitivo (C1)</label><input type="number" step="0.1" class="form-control" name="pso_c1" value="1.5"></div>
+        <div class="mb-3"><label class="form-label">Coeficiente social (C2)</label><input type="number" step="0.1" class="form-control" name="pso_c2" value="1.5"></div>
         <div class="mb-3"><label class="form-label">Factor de inercia (w)</label><input type="number" step="0.1" class="form-control" name="pso_w" value="0.9"></div>
         <div class="mb-3"><label class="form-label">Número de iteraciones</label><input type="number" class="form-control" name="pso_iterations" value="100"></div>
       `;
@@ -185,6 +186,30 @@
         <div class="mb-3"><label class="form-label">Factor de mutación (F)</label><input type="number" step="0.1" class="form-control" name="de_mutation" value="0.9"></div>
         <div class="mb-3"><label class="form-label">Tasa de cruza (CR)</label><input type="number" step="0.1" class="form-control" name="de_crossover" value="0.5"></div>
         <div class="mb-3"><label class="form-label">Número de iteraciones</label><input type="number" class="form-control" name="de_iterations" value="100"></div>
+      `;
+    } else if (algo === 'MFO') {
+      paramsContainer.innerHTML = `
+        <h4 class="mt-4">Parámetros MFO</h4>
+        <div class="mb-3">
+          <label class="form-label">Número de Polillas (N)</label>
+          <input type="number" class="form-control" name="mfo_particles" value="50">
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Número de iteraciones</label>
+          <input type="number" class="form-control" name="mfo_iterations" value="100">
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Constante de forma de espiral (b)</label>
+          <input type="number" step="0.1" class="form-control" name="mfo_b" value="1.0">
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Modo de Selección de Flama</label>
+          <select class="form-select" name="mfo_selection">
+            <option value="Adaptativo">Adaptativo (i % flame_no)</option>
+            <option value="Mejor Flama">Mejor Flama</option>
+            <option value="Peor Flama">Peor Flama</option>
+          </select>
+        </div>
       `;
     }
   }

@@ -51,13 +51,15 @@ def GA(objf, lb, ub, dim, population, generations, mutation_rate, crossover_rate
         pop = np.vstack([parents, np.array(children)])
         fitness = np.array([objf(ind) for ind in pop])
         
+        current_best = float(np.min(fitness)) # <--- Añadido
         best_idx = np.argmin(fitness)
         history.append({
             "generation": g, 
             "solution": pop[best_idx].tolist(), 
-            "fitness": float(fitness[best_idx])
+            "fitness": float(fitness[best_idx]),
+            "current_fitness": current_best   # <--- Añadido
         })
-        
+
     best_idx = np.argmin(fitness)
     return pop[best_idx].tolist(), float(fitness[best_idx]), history
     
@@ -77,8 +79,15 @@ def PSO(objf, lb, ub, dim, particles, iterations, c1, c2, w):
             val = objf(X[i])
             if val < pbest_val[i]:
                 pbest[i], pbest_val[i] = X[i].copy(), val
+        # ... (dentro del bucle t)
+        current_best = float(np.min([objf(x) for x in X])) # <--- Añadido
         gbest = pbest[np.argmin(pbest_val)]
-        history.append({"generation": t, "solution": gbest.tolist(), "fitness": float(objf(gbest))})
+        history.append({
+            "generation": t, 
+            "solution": gbest.tolist(), 
+            "fitness": float(objf(gbest)),
+            "current_fitness": current_best # <--- Añadido
+        })
     return gbest.tolist(), float(objf(gbest)), history
 
 def ACO(objf, lb, ub, dim, ants, alpha, beta, evaporation, iterations):
@@ -86,13 +95,22 @@ def ACO(objf, lb, ub, dim, ants, alpha, beta, evaporation, iterations):
     best_sol, best_val = None, float("inf")
     history = []
     for t in range(iterations):
+        gen_best_val = float("inf") 
         for _ in range(ants):
             sol = np.random.uniform(lb, ub, dim)
             val = objf(sol)
-            if best_sol is None or val < best_val:
-                best_sol, best_val = sol, val
-        pheromone = (1-evaporation)*pheromone + alpha*np.random.rand(dim)
-        history.append({"generation": t, "solution": best_sol.tolist(), "fitness": float(best_val)})
+            if val < gen_best_val: 
+                gen_best_val = val # El mejor de la "camada" actual
+            
+            if val < best_val:
+                best_sol, best_val = sol.copy(), val
+
+        history.append({
+            "generation": t, 
+            "solution": best_sol.tolist(), 
+            "fitness": float(best_val),      # Récord histórico
+            "current_fitness": float(gen_best_val) # El mejor de las hormigas de hoy
+        })
     return best_sol.tolist(), float(best_val), history
 
 def AIS(objf, lb, ub, dim, antibodies, cloning_rate, alpha, beta, iterations):
@@ -109,13 +127,26 @@ def AIS(objf, lb, ub, dim, antibodies, cloning_rate, alpha, beta, iterations):
                 clones.append(clone)
         clones = np.array(clones)
         clone_fit = np.array([objf(c) for c in clones])
+
+        # ... dentro del bucle t de AIS ...
         combined = np.vstack([pop, clones])
         combined_fit = np.concatenate([fitness, clone_fit])
+        
+        # CAPTURA AQUÍ el mejor de los clones (exploración) antes de filtrar
+        current_best = float(np.min(clone_fit)) # <--- ESTA ES LA EXPLORACIÓN
+        
         idx = np.argsort(combined_fit)[:antibodies]
         pop, fitness = combined[idx], combined_fit[idx]
+        
         if fitness[0] < best_val:
-            best_sol, best_val = pop[0], fitness[0]
-        history.append({"generation": t, "solution": best_sol.tolist(), "fitness": float(best_val)})
+            best_sol, best_val = pop[0].copy(), fitness[0]
+
+        history.append({
+            "generation": t, 
+            "solution": best_sol.tolist(), 
+            "fitness": float(best_val),
+            "current_fitness": current_best # <--- Verás los picos de las mutaciones
+        })
     return best_sol.tolist(), float(best_val), history
 
 def DE(objf, lb, ub, dim, population, mutation_factor, crossover_rate, iterations):
@@ -134,10 +165,91 @@ def DE(objf, lb, ub, dim, population, mutation_factor, crossover_rate, iteration
             val = objf(trial)
             if val < fitness[i]:
                 pop[i], fitness[i] = trial, val
-        best_sol, best_val = pop[np.argmin(fitness)], np.min(fitness)
-        history.append({"generation": t, "solution": best_sol.tolist(), "fitness": float(best_val)})
+# ... dentro del bucle t de DE ...
+        for i in range(population):
+            # (Lógica de mutación y cruce...)
+            if val < fitness[i]:
+                pop[i], fitness[i] = trial, val
+
+        # Justo antes del append:
+        current_gen_min = float(np.min(fitness)) # El mejor de esta iteración
+        
+        if current_gen_min < best_val:
+            best_val = current_gen_min
+            best_sol = pop[np.argmin(fitness)].copy()
+
+        history.append({
+            "generation": t, 
+            "solution": best_sol.tolist(), 
+            "fitness": float(best_val),
+            "current_fitness": current_gen_min 
+        })
     return best_sol.tolist(), float(best_val), history
 
+def MFO(objf, lb, ub, dim, N, Max_iter, b=1, selection_mode="Adaptativo"):
+    moths = np.random.uniform(lb, ub, (N, dim))
+    fitness = np.array([objf(m) for m in moths])
+    
+    # Inicialización de flamas
+    sorted_idx = np.argsort(fitness)
+    flames = moths[sorted_idx].copy()
+    flame_fitness = fitness[sorted_idx].copy()
+    
+    best_flame_pos = flames[0].copy()
+    best_flame_score = flame_fitness[0]
+    
+    history = []
+
+    for t in range(Max_iter):
+        # 1. Reducir número de flamas linealmente
+        flame_no = int(np.ceil(N - t * ((N - 1) / Max_iter)))
+        
+        # 2. El parámetro 'a' linealmente decreciente de -1 a -2
+        a = -1 + t * ((-1) / Max_iter)
+
+        for i in range(N):
+            # Selección de flama según el modo
+            if selection_mode == "Mejor Flama":
+                flame = flames[0]
+            elif selection_mode == "Adaptativo":
+                idx = i if i < flame_no else flame_no - 1
+                flame = flames[idx]
+            else:
+                flame = flames[flame_no-1]
+            
+            # Movimiento espiral
+            distance = np.abs(flame - moths[i])
+            rand_t = (a - 1) * np.random.rand() + 1
+            moths[i] = distance * np.exp(b * rand_t) * np.cos(2 * np.pi * rand_t) + flame
+
+        # 3. Evaluar polillas después del movimiento
+        moths = np.clip(moths, lb, ub)
+        fitness = np.array([objf(m) for m in moths])
+        
+        # 4. CAPTURAR MEJOR DE GENERACIÓN (Antes de actualizar flamas)
+        current_best_val = float(np.min(fitness))
+
+        # 5. ACTUALIZAR FLAMAS (Combinar polillas y flamas viejas, ordenar y elegir las mejores N)
+        combined_moths = np.vstack([flames, moths])
+        combined_fitness = np.concatenate([flame_fitness, fitness])
+        
+        sorted_indices = np.argsort(combined_fitness)
+        flames = combined_moths[sorted_indices[:N]]
+        flame_fitness = combined_fitness[sorted_indices[:N]]
+        
+        # 6. ACTUALIZAR RÉCORD GLOBAL
+        if flame_fitness[0] < best_flame_score:
+            best_flame_score = float(flame_fitness[0])
+            best_flame_pos = flames[0].copy()
+
+        history.append({
+            "generation": t,
+            "solution": best_flame_pos.tolist(),
+            "fitness": float(best_flame_score),  # Verde (Récord)
+            "current_fitness": current_best_val    # Azul (Actual)
+        })
+
+    return best_flame_pos.tolist(), float(best_flame_score), history
 # -------------------------------
 # Ruta principal
 # -------------------------------
@@ -278,13 +390,13 @@ def run_algorithm():
             params = {
                 "Partículas": int(data.get('pso_particles', 50)),
                 "Iteraciones": int(data.get('pso_iterations', 100)),
-                "C1": float(data.get('pso_c1', 1.5)),
-                "C2": float(data.get('pso_c2', 1.5)),
+                "C1 (Cognitivo)": float(data.get('pso_c1', 1.5)),
+                "C2 (Social)": float(data.get('pso_c2', 1.5)),
                 "W (Inercia)": float(data.get('pso_w', 0.9))
             }
             best_sol, best_val, history = PSO(objf, lb, ub, dim, 
                                               params["Partículas"], params["Iteraciones"], 
-                                              params["C1"], params["C2"], params["W (Inercia)"])
+                                              params["C1 (Cognitivo)"], params["C2 (Social)"], params["W (Inercia)"])
         elif algo == 'ACO':
             params = {
                 "Hormigas": int(data.get('aco_ants', 50)),
@@ -317,20 +429,39 @@ def run_algorithm():
             best_sol, best_val, history = DE(objf, lb, ub, dim, 
                                              params["Población"], params["Factor Mutación"], 
                                              params["Tasa Crossover"], params["Iteraciones"])
+        elif algo == 'MFO':
+            selection_mode = data.get('mfo_selection', 'Adaptive') 
+            
+            params = {
+                "Polillas (N)": int(data.get('mfo_particles', 50)),
+                "Iteraciones": int(data.get('mfo_iterations', 100)),
+                "Constante Espiral": float(data.get('mfo_b', 1)),
+                "Modo Selección": selection_mode
+            }
+            
+            best_sol, best_val, history = MFO(
+                objf, lb, ub, dim, 
+                N=params["Polillas (N)"], 
+                Max_iter=params["Iteraciones"],
+                b=params["Constante Espiral"],
+                selection_mode=selection_mode
+            )
         else:
             return render_template("main.html", error="Algoritmo no soportado")
 
         # --- PHASE 3: FINAL TOUCHES ---
         if mode == "max":
             best_val = -best_val
-            for h in history: h["fitness"] = -h["fitness"]
+            for h in history: 
+                h["fitness"] = -h["fitness"]
+                if "current_fitness" in h: # <--- Añadir este IF
+                    h["current_fitness"] = -h["current_fitness"]
 
         # Convert the mathematical expression to a beautiful LaTeX format
         if problem_type == 'tsp':
             latex_func = "Problema del Viajero"
         else:
             latex_func = f"f(x) = {latex(expr)}" if dim == 1 else f"f(x, y) = {latex(expr)}"
-
         return render_template(
             'result.html',
             algorithm=algo,
