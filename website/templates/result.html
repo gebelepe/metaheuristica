@@ -37,23 +37,66 @@
                                     <th class="table-light w-50">Algoritmo</th>
                                     <td><span class="badge {{ current_badge_color }} fs-6">{{ full_algo_name }}</span></td>
                                 </tr>
+                                
                                 <tr>
-                                  <th class="table-light align-middle">Problema</th>
-                                  <td class="fs-5">
-                                      {% if plot_data and plot_data.type == 'tsp' %}
-                                          <span class="fw-bold text-primary">Problema del Viajante (TSP)</span>
-                                      {% else %}
-                                          \( {{ function }} \) 
-                                      {% endif %}
-                                  </td>
-                              </tr>
-                                <tr>
-                                    <th class="table-light">{{ "Ciudades" if plot_data and plot_data.type == 'tsp' else "Dimensión" }}</th>
-                                    <td>{{ dim }}</td>
+                                    <th class="table-light align-middle">Problema</th>
+                                    <td class="fs-6">
+                                        {% if plot_data and plot_data.type == 'tsp' %}
+                                            <span class="fw-bold text-info">Problema del Viajante (TSP)</span>
+                                        {% elif plot_data and plot_data.type == 'knapsack' %}
+                                            <span class="fw-bold text-success">Problema de la Mochila</span>
+                                        {% elif scheduling_data %}
+                                            <span class="fw-bold text-warning">Job Scheduling</span>
+                                        {% else %}
+                                            \( {{ function }} \) 
+                                        {% endif %}
+                                    </td>
                                 </tr>
+                                
+<tr>
+                                    <th class="table-light">
+                                        {% if plot_data and plot_data.type == 'tsp' %}
+                                            Ciudades
+                                        {% elif plot_data and plot_data.type == 'knapsack' %}
+                                            Peso Final de la Mochila
+                                        {% elif scheduling_data %}
+                                            Máquinas
+                                        {% else %}
+                                            Dimensión
+                                        {% endif %}
+                                    </th>
+
+                                    <td>
+                                        {% if plot_data and plot_data.type == 'knapsack' and best_weight %}
+                                            {{ best_weight|round(2) }} kg
+                                        {% elif scheduling_data %}
+                                            {{ num_machines }}
+                                        {% else %}
+                                            {{ dim }}
+                                        {% endif %}
+                                    </td>
+                                </tr>
+
+                                {% if scheduling_data %}
                                 <tr>
-                                    <th class="table-light">{{ "Mejor Distancia" if plot_data and plot_data.type == 'tsp' else "Mejor Fitness" }}</th>
-                                    <td class="fw-bold text-success fs-5">{{ best_value|round(4) }}</td>
+                                    <th class="table-light">
+                                        Tareas
+                                    </th>
+                                    <td>
+                                        {# Usamos el filtro length para contar cuántos elementos hay en la lista #}
+                                        {{ scheduling_data|length }}
+                                    </td>
+                                </tr>
+                                {% endif %}
+                                <tr>
+                                    <th class="table-light">
+                                        {% if plot_data and plot_data.type == 'tsp' %} Mejor Distancia 
+                                        {% elif plot_data and plot_data.type == 'knapsack' %} Valor Total Obtenido
+                                        {% else %} Mejor Fitness {% endif %}
+                                    </th>
+                                    <td class="fw-bold text-success fs-5">
+                                        {{ " $" if plot_data and plot_data.type == 'knapsack' else "" }}{{ best_value|round(4) }} 
+                                    </td>
                                 </tr>
                             </tbody>
                         </table>
@@ -125,14 +168,18 @@
                         <tr class="fs-5">
                             {% for p in [p0, p1, p2, p_final] %}
                             <td class="py-3">
-                                <div class="fw-bold text-dark">{{ (p.fitness | round(4)) | float }}</div>
+                                <div class="fw-bold text-dark">{{ " $" if plot_data and plot_data.type == 'knapsack' else "" }}{{ "%g" | format(p.fitness | round(2) | float) }}{{ "s" if scheduling_data else "" }}</div>
                                 
-                                {% if plot_data.type != 'tsp' %}
-                                <div class="text-muted" style="font-size: 0.7rem;">
-                                    ({% for val in p.solution -%}
-                                        {{ (val | round(3)) | float }}{{ ", " if not loop.last }}
-                                    {%- endfor %})
-                                </div>
+                                {% if plot_data.type == 'knapsack' %}
+                                    <div class="text-muted small" style="font-size: 0.65rem;">
+                                        Lleva: {{ (p.solution | sum | round | int) }} ítems
+                                    </div>
+                                {% elif plot_data.type != 'tsp' %}
+                                    <div class="text-muted" style="font-size: 0.7rem;">
+                                        ({% for val in p.solution -%}
+                                            {{ (val | round(2)) | float }}{{ ", " if not loop.last }}
+                                        {%- endfor %})
+                                    </div>
                                 {% endif %}
                             </td>
                             {% endfor %}
@@ -190,14 +237,85 @@
 
 <div class="row mb-5">
     <div class="{% if plot_data and plot_data.type == 'tsp' %}col-lg-8{% else %}col-12{% endif %}">
-        <div id="mainPlot" class="plot-container border rounded shadow-sm"></div>
-    </div>
+        
+        {% if plot_data and plot_data.type == 'knapsack' %}
+        <div>
+        <div class="card shadow-sm h-100" style="max-height: 500px;">
+            <div class="card-header {{ current_badge_color }} text-white">
+                    <i class="bi bi-bag-check-fill me-2"></i>Contenido de la Mochila
+                </div>
+                <div class="card-body p-0" style="overflow-y: auto;">
+                    <table class="table table-sm table-hover align-middle mb-0">
+                        <thead class="table-light sticky-top">
+                            <tr class="small text-muted">
+                                <th class="text-center" style="width: 60px;">Estado</th>
+                                <th>Ítem</th>
+                                <th class="text-end">Peso</th>
+                                <th class="text-end">Valor</th>
+                            </tr>
+                        </thead>
+                        <tbody id="knapsack-body">
+                            {% for item in items_data %}
+                            <tr>
+                                <td class="text-center">
+                                    {# Verificamos si el ítem está en la mejor solución (asumiendo que best_solution tiene 1s y 0s) #}
+                                    {% if item.seleccion %}
+                                        <span class="badge rounded-pill bg-light text-muted"></span>
+                                            <i class="bi bi-x">Si</i>
+                                            
+                                        </span>
+                                    {% else %}
+                                        <span class="badge rounded-pill bg-success"></span>
+                                            <i class="bi bi-check-lg">No</i>
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="fw-bold small">{{ item.nombre }}</span>
+                                </td>
+                                <td class="text-end font-monospace">{{ item.peso }}</td>
+                                <td class="text-end font-monospace text-primary">${{ item.valor }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            </div>
 
-    {% if plot_data and plot_data.type == 'tsp' %}
+         
+        {% elif scheduling_data %}
+        <div>
+        <div class="card shadow-sm h-100" style="max-height: 500px;">
+            <div class="card-header {{ current_badge_color }} text-white">
+                    <i class="bi bi-bag-check-fill me-2"></i>Asignacion de Tareas</div>
+                <div class="card-body p-0" style="overflow-y: auto;">
+                <table class="table">
+                    <thead>
+                        <tr><th>Tarea</th><th>Duración</th><th>Máquina Asignada</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for item in scheduling_data %}
+                        <tr>
+                            <td>{{ item.tarea }}</td>
+                            <td>{{ item.duracion }}</td>
+                            <td><span class="badge {{ current_badge_color }}">{{ item.maquina }}</span></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                </div>
+            </div>
+            </div>
+        {% else %}
+   <div id="mainPlot" class="plot-container border rounded shadow-sm"></div>
+        {% endif %}
+    </div> {% if plot_data and plot_data.type == 'tsp' %}
     <div class="col-lg-4 mt-4 mt-lg-0">
         <div class="card shadow-sm h-100" style="max-height: 500px;">
             <div class="card-header {{ current_badge_color }} text-white">
-                <i class="bi bi-geo-alt-fill"></i>Ruta</div>
+                <i class="bi bi-geo-alt-fill"></i> Ruta
+            </div>
             <div class="card-body p-0" style="overflow-y: auto;">
                 <table class="table table-sm table-hover mb-0">
                     <thead class="table-light sticky-top">
@@ -213,15 +331,12 @@
         </div>
     </div>
     {% endif %}
-    </div>
-
-
+</div>
     <div class="mb-5">
         <div id="convergencePlot" class="plot-container border rounded shadow-sm"></div>
     </div>
 
     
-
     {% if algorithm == 'MFO' %}
         <div class="mb-5">
             <div class="card shadow-sm border-0">
@@ -289,6 +404,24 @@
             name: 'Ruta Optimizada'
         };
         Plotly.newPlot('mainPlot', [traceRoute], { ...commonLayout, title: 'Mapa de Ruta Final' }, config);
+    {% elif plot_data and plot_data.type == 'bn' %}
+        {% if dim == 1 %}
+            const traceFunc = { x: {{ plot_data.x|safe }}, y: {{ plot_data.y|safe }}, type: 'scatter', mode: 'lines', name: 'Función' };
+            const traceHist = { x: historySolutions.map(s => s[0]), y: historyFitness, mode: 'markers', marker: {color: 'orange', opacity: 0.5}, name: 'Historial' };
+            const traceBest = { x: [{{ best_solution[0] }}], y: [{{ best_value }}], mode: 'markers', marker: {color: 'red', size: 12, symbol: 'star'}, name: 'Mejor' };
+            Plotly.newPlot('mainPlot', [traceFunc, traceHist, traceBest], { ...commonLayout, title: 'Función Graficada 1D' }, config);
+
+        {% elif dim == 2 %}
+            const traceSurface = { 
+                x: {{ plot_data.x|safe }}, y: {{ plot_data.y|safe }}, z: {{ plot_data.z|safe }}, 
+                type: 'surface', colorscale: 'Viridis', showscale: false, opacity: 0.8
+            };
+            const traceBest2D = {
+                x: [{{ best_solution[0] }}], y: [{{ best_solution[1] }}], z: [{{ best_value }}],
+                mode: 'markers', type: 'scatter3d', marker: {size: 8, color: 'red'}, name: 'Mejor'
+            };
+            Plotly.newPlot('mainPlot', [traceSurface, traceBest2D], { ...commonLayout, title: 'Superficie 2D' }, config); 
+        {% endif %}
 
     {% elif dim == 1 %}
         const traceFunc = { x: {{ plot_data.x|safe }}, y: {{ plot_data.y|safe }}, type: 'scatter', mode: 'lines', name: 'Función' };
@@ -349,8 +482,9 @@
         legend: { orientation: 'h', x: 0.5, xanchor: 'center', y: -0.2 }
     };
 
-    // ¡IMPORTANTE! El orden debe ser [Global, Gen] para que 'tonexty' sepa contra quién compararse
-    Plotly.newPlot('convergencePlot', [traceGlobal, traceGen], convLayout, config);
+        // ¡IMPORTANTE! El orden debe ser [Global, Gen] para que 'tonexty' sepa contra quién compararse
+        Plotly.newPlot('convergencePlot', [traceGlobal, traceGen], convLayout, config);
+
 
 {% if algorithm == 'MFO' %}
     (function renderSpiral() {

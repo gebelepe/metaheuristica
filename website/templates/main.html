@@ -25,12 +25,47 @@
       </select>
     </div>
 
-    <div class="mb-3">
-  <label class="form-label">Tipo de Problema</label>
-  <select class="form-select" id="problem_type" name="problem_type" onchange="updateUIForProblemType(this.value)">
-    <option value="function">Optimización de Función</option>
-    <option value="tsp">Problema del Viajante (TSP)</option>
+<div class="mb-4">
+  <label class="form-label fw-bold"><i class="bi bi-layers-half"></i> Tipo de Problema</label>
+  <select class="form-select form-select-lg border-primary shadow-sm" id="problem_type" name="problem_type" onchange="updateUIForProblemType(this.value)">
+    <optgroup label="Optimización Matemática">
+      <option value="function">Función</option>
+    </optgroup>
+            <optgroup label="Problemas Binarios">
+    <option value="knapsack">Knapsack</option>
+    </optgroup>
+    <optgroup label="Problemas Combinatorios">
+          <option value="categorical">Job Scheduling (Categorico)</option>
+      <option value="tsp">Problema del Viajante (TSP)</option>
+    </optgroup>
+
   </select>
+  <div id="problem-desc" class="form-text mt-2 text-primary">
+    Optimiza variables con valores reales dentro de un rango definido.
+  </div>
+</div>
+
+<div id="scheduling-problem-group" style="display:none;" class="mb-3">
+    <div class="card p-3 shadow-sm border-warning">
+        <label class="form-label fw-bold"><i class="bi bi-clock-history"></i> Gestión de Tareas y Máquinas</label>
+        
+        <div class="input-group mb-3">
+            <span class="input-group-text">Máquinas</span>
+            <input type="number" id="scheduling_machines" name="scheduling_machines" class="form-control" value="3" min="1" max="20">
+            
+            <span class="input-group-text">Nº Tareas</span>
+            <input type="number" id="randomTaskCount" class="form-control" value="10" min="1" max="100">
+            
+            <button class="btn btn-warning text-dark" type="button" onclick="generateRandomScheduling()">
+                <i class="bi bi-shuffle"></i> Generar Azar
+            </button>
+        </div>
+
+        <label class="form-label small fw-bold">Lista de Tareas (Nombre, Duración)</label>
+        <textarea class="form-control" name="scheduling_tasks" id="scheduling_tasks" rows="6" 
+                  placeholder="Tarea_1, 10&#10;Tarea_2, 25"></textarea>
+        <small class="text-muted">Se generarán tareas con duraciones aleatorias basadas en la cantidad indicada.</small>
+    </div>
 </div>
 
 <div id="math-problem-group">
@@ -77,6 +112,31 @@
     </div>
 </div>
 
+<div id="knapsack-problem-group" style="display:none;" class="mb-3">
+    <div class="card p-3 shadow-sm border-primary">
+        <label class="form-label fw-bold"><i class="bi bi-bag-fill"></i> Gestión de la Mochila</label>
+        
+        <div class="input-group mb-3">
+            <span class="input-group-text">Capacidad (kg)</span>
+            <input type="number" id="knapsack_capacity" name="knapsack_capacity" class="form-control" value="15" min="1">
+            
+            <span class="input-group-text">Nº Objetos</span>
+            <input type="number" id="randomItemCount" class="form-control" value="5" min="1" max="50">
+            
+            <button class="btn btn-primary" type="button" onclick="generateRandomItems()">
+                <i class="bi bi-shuffle"></i> Generar Azar
+            </button>
+        </div>
+
+        <label class="form-label small fw-bold">Elementos (Nombre, Valor, Peso)</label>
+        <textarea class="form-control" name="knapsack_items" id="knapsack_items" rows="6" 
+                  placeholder="Brújula, 40, 2&#10;Saco, 100, 5"></textarea>
+        <small class="text-muted">Formato: Nombre, Valor, Peso (uno por línea).</small>
+    </div>
+</div>
+
+
+
   <div id="tsp-problem-group" style="display:none;" class="mb-3">
     <div class="card p-3 shadow-sm border-info">
       <label class="form-label fw-bold">Gestión de Ciudades</label>
@@ -96,18 +156,21 @@
     </div>
   </div>
 
+
     
     <!-- Límites -->
-    <div class="row mb-3">
-      <div class="col-12 col-md-6 mb-3 mb-md-0">
-        <label class="form-label">Límite inferior</label>
-        <input type="number" class="form-control" id="lb" name="lb" value="-5">
+  <div id="limit-group" class="mb-3"> 
+      <div class="row">
+        <div class="col-12 col-md-6 mb-3 mb-md-0">
+          <label class="form-label">Límite inferior</label>
+          <input type="number" class="form-control" id="lb" name="lb" value="-5">
+        </div>
+        <div class="col-12 col-md-6">
+          <label class="form-label">Límite superior</label>
+          <input type="number" class="form-control" id="ub" name="ub" value="5">
+        </div>
       </div>
-      <div class="col-12 col-md-6">
-        <label class="form-label">Límite superior</label>
-        <input type="number" class="form-control" id="ub" name="ub" value="5">
-      </div>
-    </div>
+  </div>
 
     <!-- Contenedor dinámico de parámetros -->
     <div id="algorithm-params"></div>
@@ -122,6 +185,7 @@
 </div>
 
 <script>
+
   function setFunction(expr) {
     document.getElementById('function').value = expr;
   }
@@ -237,31 +301,123 @@
     }
   });
 
-    function updateUIForProblemType(type) {
-    const tspGroup = document.getElementById('tsp-problem-group');
-    const mathGroup = document.getElementById('math-problem-group');
+  function generateRandomScheduling() {
+    const taskTextArea = document.getElementById('scheduling_tasks');
+    const machineInput = document.getElementById('scheduling_machines');
     
-    // Input fields for limits (lb and ub)
-    const lbInput = document.getElementsByName('lb')[0];
-    const ubInput = document.getElementsByName('ub')[0];
+    // 1. Generar número de máquinas al azar (entre 2 y 5)
+    const numMachines = Math.floor(Math.random() * 4) + 2;
+    machineInput.value = numMachines;
 
-    if (type === 'tsp') {
-      tspGroup.style.display = 'block';
-      mathGroup.style.display = 'none';
-      
-      // Auto-set limits for TSP Random Keys (usually 0 to 1)
-      lbInput.value = 0;
-      ubInput.value = 100;
-    } else {
-      tspGroup.style.display = 'none';
-      mathGroup.style.display = 'block';
-      
-      // Reset limits for standard functions
-      lbInput.value = -5;
-      ubInput.value = 5;
+    // 2. Generar número de tareas al azar (entre 5 y 15)
+    const numTasks = Math.floor(Math.random() * 11) + 5;
+    
+    let taskList = [];
+    const nombres = ['Tarea', 'Job', 'Proceso', 'Carga', 'Fix'];
+    
+    for (let i = 1; i <= numTasks; i++) {
+        const nombreAleatorio = nombres[Math.floor(Math.random() * nombres.length)];
+        const duracion = Math.floor(Math.random() * 41) + 5; // Duración entre 5 y 45
+        taskList.push(`${nombreAleatorio}_${i}, ${duracion}`);
     }
-  }
 
+    // 3. Insertar en el textarea
+    taskTextArea.value = taskList.join('\n');
+}
+
+function updateUIForProblemType(type) {
+    const tspGroup = document.getElementById('tsp-problem-group');
+    const limgroup = document.getElementById('limit-group');
+    const schedulingGroup = document.getElementById('scheduling-problem-group');
+    const mathGroup = document.getElementById('math-problem-group');
+    const knapsackGroup = document.getElementById('knapsack-problem-group');
+    const desc = document.getElementById('problem-desc');
+    const lbInput = document.getElementById('lb');
+    const ubInput = document.getElementById('ub');
+    
+    // Reset de visibilidad de los grupos de problema
+    tspGroup.style.display = 'none';
+    schedulingGroup.style.display = 'none';
+    mathGroup.style.display = 'none';
+    knapsackGroup.style.display = 'none';
+    // Dentro de updateUIForProblemType(type)...
+
+
+    // Lógica de límites (se oculta en Bits, Mochila y Scheduling)
+    if (type === 'knapsack' || type === 'categorical') {
+        limgroup.style.display = 'none';
+    } else {
+        limgroup.style.display = 'block';
+    }
+
+    if (type === 'categorical') {
+        schedulingGroup.style.display = 'block';
+        desc.innerHTML = "Asigna tareas a máquinas para minimizar el tiempo total (Makespan).";
+        
+        if(document.getElementById('scheduling_tasks').value === "") {
+            document.getElementById('scheduling_tasks').value = "Tarea A, 10\nTarea B, 15\nTarea C, 5\nTarea D, 20\nTarea E, 8";
+        }
+    }
+    else if (type === 'function') {
+        mathGroup.style.display = 'block';
+        desc.innerHTML = "Optimización de funciones reales.";
+        lbInput.disabled = false;
+        ubInput.disabled = false;
+        lbInput.value = -5;
+        ubInput.value = 5;
+    } 
+    else if (type === 'knapsack') {
+        knapsackGroup.style.display = 'block';
+        desc.innerHTML = "Selecciona qué elementos llevar para maximizar el valor sin exceder el peso.";
+        lbInput.value = 0;
+        ubInput.value = 1;
+        lbInput.disabled = true;
+        ubInput.disabled = true;
+        
+        if(document.getElementById('knapsack_items').value === "") {
+            document.getElementById('knapsack_items').value = "Brújula, 40, 2\nSaco, 100, 5\nComida, 50, 10\nBotiquín, 70, 3";
+        }
+    } 
+    else if (type === 'tsp') {
+        tspGroup.style.display = 'block';
+        desc.innerHTML = "Ruta más corta visitando ciudades.";
+        lbInput.disabled = false;
+        ubInput.value = 100;
+        lbInput.value = 0;
+    }
+}
+
+function generateRandomItems() {
+    const itemTextArea = document.getElementById('knapsack_items');
+    const itemCountInput = document.getElementById('randomItemCount');
+    
+    const numItems = parseInt(itemCountInput.value);
+    
+    if (isNaN(numItems) || numItems < 1) {
+        alert("Por favor, ingresa una cantidad válida de objetos.");
+        return;
+    }
+
+    const nombres = ['Mapa', 'Cuerda', 'Tienda', 'Agua', 'Linterna', 'Batería', 'Botas', 'Manta', 'Radio', 'Herramienta'];
+    let itemList = [];
+
+    for (let i = 1; i <= numItems; i++) {
+        const nombreBase = nombres[(i-1) % nombres.length];
+        const nombre = numItems > 10 ? `${nombreBase}_${i}` : nombreBase;
+        
+        // --- LÓGICA DE INTERVALOS ---
+        
+        // Valor: Genera entre 1 y 10, luego multiplica por 10 (Resultados: 10, 20, ..., 100)
+        const valor = (Math.floor(Math.random() * 10) + 1) * 10;
+        
+        // Peso: Genera entre 1 y 6, luego multiplica por 5 (Resultados: 5, 10, ..., 30)
+        const peso = (Math.floor(Math.random() * 6) + 1) * 5;
+        
+        itemList.push(`${nombre}, ${valor}, ${peso}`);
+    }
+
+    itemTextArea.value = itemList.join('\n');
+}
 function generateRandomCities() {
     const textArea = document.getElementById('tsp_cities');
     const cityInput = document.getElementById('randomCityCount');
@@ -298,6 +454,14 @@ function generateRandomCities() {
 
     textArea.value = cityList.join('\n');
 }
+function generateRandomBits() {
+    const bitInput = document.getElementById('bit_length');
+    // Sugiere una longitud al azar entre 8 y 64 bits
+    const suggestion = [8, 16, 32, 64, 128];
+    const randomValue = suggestion[Math.floor(Math.random() * suggestion.length)];
+    bitInput.value = randomValue;
+}
+
 function renderMath() {
     let input = document.getElementById('function').value;
     const preview = document.getElementById('math-preview');
@@ -364,6 +528,12 @@ function renderMath() {
     max-width: 100%;
     overflow-x: auto; /* Adds scrollbar if formula is too wide for mobile */
   }
+  select optgroup {
+    font-size: 0.85rem;
+    font-weight: bold;
+    color: #6c757d;
+    background-color: #f8f9fa;
+}
 </style>
 
 {% endblock %}

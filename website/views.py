@@ -14,22 +14,19 @@ def main():
 # -------------------------------
 
 def GA(objf, lb, ub, dim, population, generations, mutation_rate, crossover_rate):
-    # Aseguramos un mínimo de población para que el algoritmo funcione
     if population < 4: population = 4 
-    
     pop = np.random.uniform(lb, ub, (population, dim))
+        
     fitness = np.array([objf(ind) for ind in pop])
     history = []
     
     for g in range(generations):
-        # Aseguramos que siempre haya al menos 2 padres para el cruce
         n_parents = max(2, population // 2)
         parents_idx = np.argsort(fitness)[:n_parents]
         parents = pop[parents_idx]
         children = []
         
         while len(children) < (population - len(parents)):
-            # Selección de 2 padres aleatorios
             idx1, idx2 = np.random.choice(len(parents), 2, replace=False)
             p1, p2 = parents[idx1], parents[idx2]
             
@@ -38,7 +35,6 @@ def GA(objf, lb, ub, dim, population, generations, mutation_rate, crossover_rate
                 cut = np.random.randint(1, dim)
                 child = np.concatenate([p1[:cut], p2[cut:]])
             else:
-                # Si es 1D o no hay crossover, elegimos uno de los dos padres
                 child = p1.copy() if np.random.rand() < 0.5 else p2.copy()
             
             # Mutación
@@ -51,13 +47,13 @@ def GA(objf, lb, ub, dim, population, generations, mutation_rate, crossover_rate
         pop = np.vstack([parents, np.array(children)])
         fitness = np.array([objf(ind) for ind in pop])
         
-        current_best = float(np.min(fitness)) # <--- Añadido
+        current_best = float(np.min(fitness))
         best_idx = np.argmin(fitness)
         history.append({
             "generation": g, 
             "solution": pop[best_idx].tolist(), 
             "fitness": float(fitness[best_idx]),
-            "current_fitness": current_best   # <--- Añadido
+            "current_fitness": current_best
         })
 
     best_idx = np.argmin(fitness)
@@ -65,28 +61,32 @@ def GA(objf, lb, ub, dim, population, generations, mutation_rate, crossover_rate
     
 def PSO(objf, lb, ub, dim, particles, iterations, c1, c2, w):
     X = np.random.uniform(lb, ub, (particles, dim))
-    V = np.zeros_like(X)
+        
+    V = np.zeros((particles, dim), dtype=float)
     pbest = X.copy()
     pbest_val = np.array([objf(x) for x in X])
     gbest = pbest[np.argmin(pbest_val)]
     history = []
+    
     for t in range(iterations):
         for i in range(particles):
             r1, r2 = np.random.rand(dim), np.random.rand(dim)
             V[i] = w*V[i] + c1*r1*(pbest[i]-X[i]) + c2*r2*(gbest-X[i])
+            
             X[i] += V[i]
             X[i] = np.clip(X[i], lb, ub)
+                
             val = objf(X[i])
             if val < pbest_val[i]:
                 pbest[i], pbest_val[i] = X[i].copy(), val
-        # ... (dentro del bucle t)
-        current_best = float(np.min([objf(x) for x in X])) # <--- Añadido
+                
+        current_best = float(np.min([objf(x) for x in X]))
         gbest = pbest[np.argmin(pbest_val)]
         history.append({
             "generation": t, 
             "solution": gbest.tolist(), 
             "fitness": float(objf(gbest)),
-            "current_fitness": current_best # <--- Añadido
+            "current_fitness": current_best
         })
     return gbest.tolist(), float(objf(gbest)), history
 
@@ -98,9 +98,10 @@ def ACO(objf, lb, ub, dim, ants, alpha, beta, evaporation, iterations):
         gen_best_val = float("inf") 
         for _ in range(ants):
             sol = np.random.uniform(lb, ub, dim)
+                
             val = objf(sol)
             if val < gen_best_val: 
-                gen_best_val = val # El mejor de la "camada" actual
+                gen_best_val = val
             
             if val < best_val:
                 best_sol, best_val = sol.copy(), val
@@ -108,16 +109,18 @@ def ACO(objf, lb, ub, dim, ants, alpha, beta, evaporation, iterations):
         history.append({
             "generation": t, 
             "solution": best_sol.tolist(), 
-            "fitness": float(best_val),      # Récord histórico
-            "current_fitness": float(gen_best_val) # El mejor de las hormigas de hoy
+            "fitness": float(best_val),
+            "current_fitness": float(gen_best_val)
         })
     return best_sol.tolist(), float(best_val), history
 
 def AIS(objf, lb, ub, dim, antibodies, cloning_rate, alpha, beta, iterations):
     pop = np.random.uniform(lb, ub, (antibodies, dim))
+        
     fitness = np.array([objf(ind) for ind in pop])
     best_sol, best_val = pop[np.argmin(fitness)], np.min(fitness)
     history = []
+    
     for t in range(iterations):
         clones = []
         for i in range(antibodies):
@@ -125,15 +128,14 @@ def AIS(objf, lb, ub, dim, antibodies, cloning_rate, alpha, beta, iterations):
                 clone = pop[i] + np.random.normal(0, alpha, dim)
                 clone = np.clip(clone, lb, ub)
                 clones.append(clone)
+                
         clones = np.array(clones)
         clone_fit = np.array([objf(c) for c in clones])
 
-        # ... dentro del bucle t de AIS ...
         combined = np.vstack([pop, clones])
         combined_fit = np.concatenate([fitness, clone_fit])
         
-        # CAPTURA AQUÍ el mejor de los clones (exploración) antes de filtrar
-        current_best = float(np.min(clone_fit)) # <--- ESTA ES LA EXPLORACIÓN
+        current_best = float(np.min(clone_fit))
         
         idx = np.argsort(combined_fit)[:antibodies]
         pop, fitness = combined[idx], combined_fit[idx]
@@ -145,12 +147,14 @@ def AIS(objf, lb, ub, dim, antibodies, cloning_rate, alpha, beta, iterations):
             "generation": t, 
             "solution": best_sol.tolist(), 
             "fitness": float(best_val),
-            "current_fitness": current_best # <--- Verás los picos de las mutaciones
+            "current_fitness": current_best
         })
     return best_sol.tolist(), float(best_val), history
 
 def DE(objf, lb, ub, dim, population, mutation_factor, crossover_rate, iterations):
+
     pop = np.random.uniform(lb, ub, (population, dim))
+        
     fitness = np.array([objf(ind) for ind in pop])
     best_sol, best_val = pop[np.argmin(fitness)], np.min(fitness)
     history = []
@@ -161,18 +165,14 @@ def DE(objf, lb, ub, dim, population, mutation_factor, crossover_rate, iteration
             mutant = a + mutation_factor*(b-c)
             cross_points = np.random.rand(dim) < crossover_rate
             trial = np.where(cross_points, mutant, pop[i])
+            
             trial = np.clip(trial, lb, ub)
+                
             val = objf(trial)
             if val < fitness[i]:
                 pop[i], fitness[i] = trial, val
-# ... dentro del bucle t de DE ...
-        for i in range(population):
-            # (Lógica de mutación y cruce...)
-            if val < fitness[i]:
-                pop[i], fitness[i] = trial, val
 
-        # Justo antes del append:
-        current_gen_min = float(np.min(fitness)) # El mejor de esta iteración
+        current_gen_min = float(np.min(fitness))
         
         if current_gen_min < best_val:
             best_val = current_gen_min
@@ -186,29 +186,26 @@ def DE(objf, lb, ub, dim, population, mutation_factor, crossover_rate, iteration
         })
     return best_sol.tolist(), float(best_val), history
 
-def MFO(objf, lb, ub, dim, N, Max_iter, b=1, selection_mode="Adaptativo"):
-    moths = np.random.uniform(lb, ub, (N, dim))
+
+def MFO(objf, lb, ub, dim, N, Max_iter, b=1, selection_mode="Adaptativo", representation="continuous"):
+    if representation == "binary":
+        moths = np.random.randint(2, size=(N, dim))
+    else:
+        moths = np.random.uniform(lb, ub, (N, dim))
+       
     fitness = np.array([objf(m) for m in moths])
-    
-    # Inicialización de flamas
     sorted_idx = np.argsort(fitness)
     flames = moths[sorted_idx].copy()
     flame_fitness = fitness[sorted_idx].copy()
-    
     best_flame_pos = flames[0].copy()
     best_flame_score = flame_fitness[0]
-    
     history = []
 
     for t in range(Max_iter):
-        # 1. Reducir número de flamas linealmente
         flame_no = int(np.ceil(N - t * ((N - 1) / Max_iter)))
-        
-        # 2. El parámetro 'a' linealmente decreciente de -1 a -2
         a = -1 + t * ((-1) / Max_iter)
 
         for i in range(N):
-            # Selección de flama según el modo
             if selection_mode == "Mejor Flama":
                 flame = flames[0]
             elif selection_mode == "Adaptativo":
@@ -216,28 +213,28 @@ def MFO(objf, lb, ub, dim, N, Max_iter, b=1, selection_mode="Adaptativo"):
                 flame = flames[idx]
             else:
                 flame = flames[flame_no-1]
-            
-            # Movimiento espiral
             distance = np.abs(flame - moths[i])
             rand_t = (a - 1) * np.random.rand() + 1
-            moths[i] = distance * np.exp(b * rand_t) * np.cos(2 * np.pi * rand_t) + flame
+            new_pos = distance * np.exp(b * rand_t) * np.cos(2 * np.pi * rand_t) + flame
+           
+            if representation == "binary":
+                sigmoid = 1 / (1 + np.exp(-np.clip(new_pos, -10, 10)))
+                moths[i] = (np.random.rand(dim) < sigmoid).astype(int)
 
-        # 3. Evaluar polillas después del movimiento
-        moths = np.clip(moths, lb, ub)
+            else:
+                moths[i] = new_pos
+
+        if representation != "binary":
+            moths = np.clip(moths, lb, ub)
+
         fitness = np.array([objf(m) for m in moths])
-        
-        # 4. CAPTURAR MEJOR DE GENERACIÓN (Antes de actualizar flamas)
         current_best_val = float(np.min(fitness))
-
-        # 5. ACTUALIZAR FLAMAS (Combinar polillas y flamas viejas, ordenar y elegir las mejores N)
         combined_moths = np.vstack([flames, moths])
         combined_fitness = np.concatenate([flame_fitness, fitness])
-        
         sorted_indices = np.argsort(combined_fitness)
         flames = combined_moths[sorted_indices[:N]]
         flame_fitness = combined_fitness[sorted_indices[:N]]
-        
-        # 6. ACTUALIZAR RÉCORD GLOBAL
+
         if flame_fitness[0] < best_flame_score:
             best_flame_score = float(flame_fitness[0])
             best_flame_pos = flames[0].copy()
@@ -245,17 +242,21 @@ def MFO(objf, lb, ub, dim, N, Max_iter, b=1, selection_mode="Adaptativo"):
         history.append({
             "generation": t,
             "solution": best_flame_pos.tolist(),
-            "fitness": float(best_flame_score),  # Verde (Récord)
-            "current_fitness": current_best_val    # Azul (Actual)
+            "fitness": float(best_flame_score),
+            "current_fitness": current_best_val
         })
 
     return best_flame_pos.tolist(), float(best_flame_score), history
+
 # -------------------------------
 # Ruta principal
 # -------------------------------
 @views.route('/run_algorithm', methods=['POST'])
 def run_algorithm():
+    
     try:
+        
+        num_machines = None
         data = request.form
         problem_type = data.get('problem_type', 'function')
         algo = data.get('algorithm')
@@ -263,19 +264,14 @@ def run_algorithm():
         params = {}
         
         # --- PHASE 1: PREPARE THE PROBLEM ---
-        # --- PHASE 1: PREPARE THE PROBLEM ---
         if problem_type == 'tsp':
             raw_cities = data.get('tsp_cities', '').strip().split('\n')
             cities = []
-            
-            # Get bounds for validation (defaulting to 0-100 if not specified for TSP)
-            # Or use the lb/ub inputs from the form
             limit_lb = float(data.get('lb', 0))
             limit_ub = float(data.get('ub', 100))
-
             for line_no, line in enumerate(raw_cities, 1):
                 line = line.strip()
-                if not line: continue  # Skip empty lines
+                if not line: continue 
                 
                 try:
                     parts = line.split(',')
@@ -283,8 +279,6 @@ def run_algorithm():
                         raise ValueError(f"Formato incorrecto en línea {line_no}: debe ser x,y")
                     
                     x_c, y_c = map(float, parts)
-
-                    # --- RANGE VALIDATION ---
                     if not (limit_lb <= x_c <= limit_ub) or not (limit_lb <= y_c <= limit_ub):
                         return render_template("main.html", 
                             error=f"Ciudad en línea {line_no} ({x_c}, {y_c}) fuera de rango [{limit_lb}, {limit_ub}].")
@@ -292,20 +286,14 @@ def run_algorithm():
                     cities.append([x_c, y_c])
                 except ValueError as e:
                     return render_template("main.html", error=f"Error en datos de TSP: {str(e)}")
-
             if len(cities) < 3:
                 return render_template("main.html", error="El TSP requiere al menos 3 ciudades para formar un ciclo.")
             
             dim = len(cities)
-            # Important: The algorithm explores a 'priority' space (0 to 1)
-            # the cities are just used for distance calculation.
             lb, ub = 0, 1 
             mode = "min"
             expr_str = "Problema del Viajero"
-
             def objf(vec):
-                # The 'vec' contains values between 0 and 1. 
-                # argsort turns these into a sequence of city indices.
                 route = np.argsort(vec)
                 dist = 0
                 for i in range(len(route)):
@@ -315,7 +303,128 @@ def run_algorithm():
                 return dist
             
             plot_data = {"type": "tsp", "cities": cities}
+        elif problem_type == 'knapsack':
+            raw_items = data.get('knapsack_items', '').strip().split('\n')
+            capacity = float(data.get('knapsack_capacity', 15))
+            items = []
+            nombre_items = []
+            
+            for line in raw_items:
+                if not line.strip(): continue
+                parts = line.split(',')
+                nombre_items.append(str(parts[0]))
+                items.append([float(parts[1]), float(parts[2])])
+            
+            items = np.array(items)
+            dim = len(items)
+            lb, ub = 0, 1
+            mode = "max"
+            expr_str = "Problema de la Mochila"
+            def objf(vec):
+                selection = np.round(vec)
+                total_value = np.sum(selection * items[:, 0])
+                total_weight = np.sum(selection * items[:, 1])
+                
+                if total_weight > capacity:
+                    exceso_discreto = total_weight - capacity
+                    castigo_principal = 10000 * exceso_discreto
+                    peso_continuo = np.sum(vec * items[:, 1])
+                    return castigo_principal + (10 * peso_continuo)
+                    
+                return -total_value
+            plot_data = {"type": "knapsack", "items_count": dim}
 
+        elif problem_type == 'categorical':
+            raw_tasks = data.get('scheduling_tasks', '').strip().split('\n')
+            num_machines = int(data.get('scheduling_machines', 3))
+            
+            duraciones = []
+            nombres_tareas = []
+            
+            for line in raw_tasks:
+                if not line.strip(): continue
+                parts = line.split(',')
+                nombres_tareas.append(parts[0].strip())
+                duraciones.append(float(parts[1].strip()))
+            
+            dim = len(duraciones)
+            lb, ub = 0, num_machines - 1
+            mode = "min" 
+            
+            def objf(vec):
+                asignacion = np.round(vec).astype(int)
+                cargas = np.zeros(num_machines)
+                
+                for i in range(len(asignacion)):
+                    m_idx = asignacion[i]
+                    m_idx = max(0, min(m_idx, num_machines - 1))
+                    cargas[m_idx] += duraciones[i]
+                
+                return float(np.max(cargas))
+
+            plot_data = {
+                "type": "scheduling", 
+                "num_machines": num_machines,
+                "durations": duraciones
+            }
+        elif problem_type == 'bn_function':
+            expr_str = data.get('function', 'x**2')
+            expr_str = expr_str.replace('^', '**').replace(' ', '')
+            
+            dim = int(data.get('dim', 1))
+            bit_length = int(data.get('bit_length', 10))
+            
+            plot_lb = float(data.get('lb', -5))
+            plot_ub = float(data.get('ub', 5))
+            
+            lb = 0 
+            ub = 1 
+            
+            mode = data.get('optimization_type', 'min')
+            
+            from sympy.parsing.sympy_parser import standard_transformations, implicit_multiplication_application
+            transformations = (standard_transformations + (implicit_multiplication_application,))
+            
+            if dim == 1: 
+                x, y = symbols('x y')
+                expr = parse_expr(expr_str, transformations=transformations).subs(y, 0)
+                f_sym = lambdify((x,), expr, modules=["numpy", "math"])
+            elif dim == 2:
+                x, y = symbols('x y')
+                expr = parse_expr(expr_str, transformations=transformations)
+                f_sym = lambdify((x, y), expr, modules=["numpy", "math"])
+            else:
+                expr = parse_expr(expr_str, transformations=transformations)
+                f_sym = lambdify(symbols(f'x0:{dim}'), expr, modules=["numpy", "math"])
+
+            def f_original(vec):
+                try:
+                    args = list(vec)
+                    res = f_sym(args[0]) if dim == 1 else f_sym(*args)
+                    
+                    final_val = float(res.evalf()) if hasattr(res, 'evalf') else float(res)
+                    if not np.isfinite(final_val):
+                        return 1e18
+                    return final_val
+                except (ZeroDivisionError, OverflowError, TypeError):
+                    return 1e18 
+                    
+            def objf(vec):
+                bits = np.round(np.clip(vec, 0, 1)).astype(int)
+                val = f_original(bits)
+                mode_local = data.get('optimization_type', 'min')
+                return -val if mode_local == "max" else val
+
+            if dim == 1:
+                xs = np.linspace(plot_lb, plot_ub, 200)
+                ys = [f_original([xi]) for xi in xs]
+                plot_data = {"type": "function", "x": xs.tolist(), "y": ys}
+            elif dim == 2:
+                xs = np.linspace(plot_lb, plot_ub, 50)
+                ys = np.linspace(plot_lb, plot_ub, 50)
+                X, Y = np.meshgrid(xs, ys)
+                Z = np.array([[f_original([X[i,j], Y[i,j]]) for j in range(50)] for i in range(50)])
+                plot_data = {"type": "function", "x": xs.tolist(), "y": ys.tolist(), "z": Z.tolist()}
         else:
             expr_str = data.get('function', 'x**2')
             expr_str = expr_str.replace('^', '**')
@@ -324,15 +433,12 @@ def run_algorithm():
             lb = float(data.get('lb', -5))
             ub = float(data.get('ub', 5))
             mode = data.get('optimization_type', 'min')
-
             x, y = symbols('x y')
             
-            # Usamos transformations para que Sympy sea más flexible con la entrada
             from sympy.parsing.sympy_parser import standard_transformations, implicit_multiplication_application
             transformations = (standard_transformations + (implicit_multiplication_application,))
             
             if dim == 1:
-                # Nos aseguramos de que y sea 0 si la función solo es 1D
                 expr = parse_expr(expr_str, transformations=transformations).subs(y, 0)
                 var_tuple = (x,)
             elif dim == 2:
@@ -341,29 +447,21 @@ def run_algorithm():
             else:
                 expr = parse_expr(expr_str)
                 var_tuple = symbols(f'x0:{dim}')
-
             f_sym = lambdify(var_tuple, expr, modules=["numpy", "math"])
-
-            f_sym = lambdify(var_tuple, expr, modules=["numpy", "math"])
-
             def f_original(vec):
                 try:
                     args = list(vec)
                     res = f_sym(args[0]) if dim == 1 else f_sym(*args)
                     
-                    # Si res es un objeto de Sympy (como zoo o nan), evalf() fallará o dará error
                     final_val = float(res.evalf()) if hasattr(res, 'evalf') else float(res)
                     
-                    # Si el resultado no es un número finito, lanzamos error manual
                     if not np.isfinite(final_val):
-                        return 1e18 # Un valor de fitness muy alto (penalización)
+                        return 1e18 
                     return final_val
                 except (ZeroDivisionError, OverflowError, TypeError):
-                    return 1e18 # Penalización por caer en una zona inválida (división por cero)
-
+                    return 1e18 
             objf = (lambda v: -f_original(v)) if mode == "max" else f_original
-
-            # Plot Data Generation
+            
             if dim == 1:
                 xs = np.linspace(lb, ub, 200)
                 ys = [f_original([xi]) for xi in xs]
@@ -375,6 +473,13 @@ def run_algorithm():
                 Z = np.array([[f_original([X[i,j], Y[i,j]]) for j in range(50)] for i in range(50)])
                 plot_data = {"type": "function", "x": xs.tolist(), "y": ys.tolist(), "z": Z.tolist()}
 
+        # --- DETERMINAR REPRESENTACIÓN BINARIA AUTOMÁTICA ---
+        if problem_type in ['knapsack', 'bn_function']:
+            repr_mode = "binary"
+            lb, ub = 0, 1
+        else:
+            repr_mode = "continuous"
+
         # --- PHASE 2: CONFIGURE ALGO & RUN ---
         if algo == 'GA':
             params = {
@@ -384,8 +489,8 @@ def run_algorithm():
                 "Tasa Crossover": float(data.get('ga_crossover', 0.8))
             }
             best_sol, best_val, history = GA(objf, lb, ub, dim, 
-                                             params["Población"], params["Generaciones"], 
-                                             params["Tasa Mutación"], params["Tasa Crossover"])
+                                            params["Población"], params["Generaciones"], 
+                                            params["Tasa Mutación"], params["Tasa Crossover"])
         elif algo == 'PSO':
             params = {
                 "Partículas": int(data.get('pso_particles', 50)),
@@ -395,8 +500,8 @@ def run_algorithm():
                 "W (Inercia)": float(data.get('pso_w', 0.9))
             }
             best_sol, best_val, history = PSO(objf, lb, ub, dim, 
-                                              params["Partículas"], params["Iteraciones"], 
-                                              params["C1 (Cognitivo)"], params["C2 (Social)"], params["W (Inercia)"])
+                                            params["Partículas"], params["Iteraciones"], 
+                                            params["C1 (Cognitivo)"], params["C2 (Social)"], params["W (Inercia)"])
         elif algo == 'ACO':
             params = {
                 "Hormigas": int(data.get('aco_ants', 50)),
@@ -406,8 +511,8 @@ def run_algorithm():
                 "Evaporación": float(data.get('aco_evaporation', 0.3))
             }
             best_sol, best_val, history = ACO(objf, lb, ub, dim, 
-                                              params["Hormigas"], params["Alpha"], 
-                                              params["Beta"], params["Evaporación"], params["Iteraciones"])
+                                            params["Hormigas"], params["Alpha"], 
+                                            params["Beta"], params["Evaporación"], params["Iteraciones"])
         elif algo == 'AIS':
             params = {
                 "Anticuerpos": int(data.get('ais_antibodies', 100)),
@@ -417,8 +522,8 @@ def run_algorithm():
                 "Beta": float(data.get('ais_beta', 1))
             }
             best_sol, best_val, history = AIS(objf, lb, ub, dim, 
-                                              params["Anticuerpos"], params["Tasa Clonación"], 
-                                              params["Alpha"], params["Beta"], params["Iteraciones"])
+                                            params["Anticuerpos"], params["Tasa Clonación"], 
+                                            params["Alpha"], params["Beta"], params["Iteraciones"])
         elif algo == 'DE':
             params = {
                 "Población": int(data.get('de_population', 60)),
@@ -427,8 +532,8 @@ def run_algorithm():
                 "Tasa Crossover": float(data.get('de_crossover', 0.5))
             }
             best_sol, best_val, history = DE(objf, lb, ub, dim, 
-                                             params["Población"], params["Factor Mutación"], 
-                                             params["Tasa Crossover"], params["Iteraciones"])
+                                            params["Población"], params["Factor Mutación"], 
+                                            params["Tasa Crossover"], params["Iteraciones"])
         elif algo == 'MFO':
             selection_mode = data.get('mfo_selection', 'Adaptive') 
             
@@ -454,28 +559,65 @@ def run_algorithm():
             best_val = -best_val
             for h in history: 
                 h["fitness"] = -h["fitness"]
-                if "current_fitness" in h: # <--- Añadir este IF
-                    h["current_fitness"] = -h["current_fitness"]
-
-        # Convert the mathematical expression to a beautiful LaTeX format
+                if "current_fitness" in h: 
+                    h["current_fitness"] = -h["current_fitness"]          
+        
+        datos_scheduling = []
+        
         if problem_type == 'tsp':
             latex_func = "Problema del Viajero"
+        elif problem_type == 'knapsack':
+            latex_func = f"Mochila (Capacidad: {data.get('knapsack_capacity')}kg)"    
+        elif problem_type == 'categorical':
+            seleccion_final = np.round(best_sol)
+            for i in range(dim):
+                m_idx = int(max(0, min(seleccion_final[i], num_machines - 1)))
+                datos_scheduling.append({
+                    'tarea': nombres_tareas[i],
+                    'duracion': duraciones[i],
+                    'maquina': m_idx + 1
+                })      
+            latex_func = f"Job Scheduling"         
         else:
             latex_func = f"f(x) = {latex(expr)}" if dim == 1 else f"f(x, y) = {latex(expr)}"
+
+        datos_mochila = []
+        if problem_type == 'knapsack':
+            seleccion_final = np.round(best_sol)
+            peso_final = np.sum(seleccion_final * items[:, 1])
+            
+            solucion_plana = seleccion_final.flatten()
+            for i in range(dim):
+                datos_mochila.append({
+                    'nombre': nombre_items[i],
+                    'peso': float(items[i, 1]),
+                    'valor': float(items[i, 0]),
+                    'seleccion': bool(solucion_plana[i] >= 0.5) 
+                }) 
+        else:
+            peso_final = None
+
+        bit_string = ""
+        if problem_type == 'bn_function':
+            bit_string = "".join(str(int(b)) for b in np.round(best_sol))
+            latex_func = f"f(bits) = {latex(expr)}"
+                        
         return render_template(
             'result.html',
             algorithm=algo,
             best_solution=list(best_sol),
             best_value=float(best_val),
             history=history,
-            function=latex_func, # <--- Pass the new LaTeX string here
+            function=latex_func, 
             dim=dim,
             plot_data=plot_data,
             params=params,
-            mode=mode
+            mode=mode,
+            best_weight=peso_final,
+            items_data=datos_mochila,
+            scheduling_data=datos_scheduling,
+            num_machines=num_machines,
+            bit_string=bit_string,
         )
-
     except Exception as e:
-        import traceback
-        print(traceback.format_exc())
         return render_template("main.html", error=f"Error Crítico: {str(e)}")
