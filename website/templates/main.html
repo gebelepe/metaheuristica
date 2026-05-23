@@ -51,10 +51,10 @@
         
         <div class="input-group mb-3">
             <span class="input-group-text">Máquinas</span>
-            <input type="number" id="scheduling_machines" name="scheduling_machines" class="form-control" value="3" min="1" max="20">
+            <input type="number" id="scheduling_machines" name="scheduling_machines" class="form-control" value="" min="1" max="20">
             
             <span class="input-group-text">Nº Tareas</span>
-            <input type="number" id="randomTaskCount" class="form-control" value="10" min="1" max="100">
+            <input type="number" id="taskCount" class="form-control" value="" min="1" max="100">
             
             <button class="btn btn-warning text-dark" type="button" onclick="generateRandomScheduling()">
                 <i class="bi bi-shuffle"></i> Generar Azar
@@ -103,13 +103,6 @@
         <input type="hidden" id="dimValue" name="dim" value="1">
       </div>
     </div>
-        <div id="optimization-type-group" class="mb-3">
-      <div class="form-check form-switch fancy-switch">
-        <input class="form-check-input" type="checkbox" id="optSwitch">
-        <label class="form-check-label" for="optSwitch" id="optLabel">Minimización</label>
-        <input type="hidden" id="optValue" name="optimization_type" value="min">
-      </div>
-    </div>
 </div>
 
 <div id="knapsack-problem-group" style="display:none;" class="mb-3">
@@ -118,10 +111,10 @@
         
         <div class="input-group mb-3">
             <span class="input-group-text">Capacidad (kg)</span>
-            <input type="number" id="knapsack_capacity" name="knapsack_capacity" class="form-control" value="15" min="1">
+            <input type="number" id="knapsack_capacity" name="knapsack_capacity" class="form-control" value="" min="1">
             
             <span class="input-group-text">Nº Objetos</span>
-            <input type="number" id="randomItemCount" class="form-control" value="5" min="1" max="50">
+            <input type="number" id="itemCount" class="form-control" value="" min="1" max="50">
             
             <button class="btn btn-primary" type="button" onclick="generateRandomItems()">
                 <i class="bi bi-shuffle"></i> Generar Azar
@@ -134,6 +127,8 @@
         <small class="text-muted">Formato: Nombre, Valor, Peso (uno por línea).</small>
     </div>
 </div>
+
+
 
 
 
@@ -156,6 +151,13 @@
     </div>
   </div>
 
+      <div id="optimization-type-group" class="mb-3">
+      <div class="form-check form-switch fancy-switch">
+        <input class="form-check-input" type="checkbox" id="optSwitch">
+        <label class="form-check-label" for="optSwitch" id="optLabel">Minimización</label>
+        <input type="hidden" id="optValue" name="optimization_type" value="min">
+      </div>
+    </div>
 
     
     <!-- Límites -->
@@ -174,8 +176,6 @@
 
     <!-- Contenedor dinámico de parámetros -->
     <div id="algorithm-params"></div>
-
-    <!-- Maximización / Minimización -->
 
     <!-- Botón enviar -->
     <div class="mb-3 text-center">
@@ -211,24 +211,26 @@
     if (algo === 'GA') {
       paramsContainer.innerHTML = `
         <h4 class="mt-4">Parámetros GA</h4>
-        <div class="mb-3"><label class="form-label">Tamaño de población</label><input type="number" class="form-control" name="ga_population" value="100"></div>
-        <div class="mb-3"><label class="form-label">Tasa de mutación</label><input type="number" step="0.01" class="form-control" name="ga_mutation" value="0.1"></div>
-        <div class="mb-3"><label class="form-label">Tasa de cruza</label><input type="number" step="0.01" class="form-control" name="ga_crossover" value="0.7"></div>
+        <div class="mb-3"><label class="form-label">Tamaño de población</label><input type="number" step="10" class="form-control" name="ga_population" value="100"></div>
+        <div class="mb-3"><label class="form-label">Tasa de mutación</label><input type="number" step="0.1" class="form-control" name="ga_mutation" value="0.3"></div>
+        <div class="mb-3"><label class="form-label">Tasa de cruza</label><input type="number" step="0.1" class="form-control" name="ga_crossover" value="0.7"></div>
         <div class="mb-3"><label class="form-label">Número de generaciones</label><input type="number" class="form-control" name="ga_generations" value="200"></div>
       `;
-    } else if (algo === 'ACO') {
+    }
+    // [...] Etiquetas para todos los temas algoritmos [...]
+    else if (algo === 'ACO') {
       paramsContainer.innerHTML = `
         <h4 class="mt-4">Parámetros ACO</h4>
-        <div class="mb-3"><label class="form-label">Número de hormigas</label><input type="number" class="form-control" name="aco_ants" value="50"></div>
+        <div class="mb-3"><label class="form-label">Número de hormigas</label><input type="number" step="10" class="form-control" name="aco_ants" value="50"></div>
         <div class="mb-3"><label class="form-label">α (feromona)</label><input type="number" step="0.1" class="form-control" name="aco_alpha" value="1"></div>
         <div class="mb-3"><label class="form-label">β (heurística)</label><input type="number" step="0.1" class="form-control" name="aco_beta" value="2"></div>
-        <div class="mb-3"><label class="form-label">Tasa de evaporación</label><input type="number" step="0.01" class="form-control" name="aco_evaporation" value="0.3"></div>
+        <div class="mb-3"><label class="form-label">Tasa de evaporación</label><input type="number" step="0.1" class="form-control" name="aco_evaporation" value="0.3"></div>
         <div class="mb-3"><label class="form-label">Número de iteraciones</label><input type="number" class="form-control" name="aco_iterations" value="100"></div>
       `;
     } else if (algo === 'PSO') {
       paramsContainer.innerHTML = `
         <h4 class="mt-4">Parámetros PSO</h4>
-        <div class="mb-3"><label class="form-label">Número de partículas</label><input type="number" class="form-control" name="pso_particles" value="50"></div>
+        <div class="mb-3"><label class="form-label">Número de partículas</label><input type="number" step="10" class="form-control" name="pso_particles" value="50"></div>
         <div class="mb-3"><label class="form-label">Coeficiente cognitivo (C1)</label><input type="number" step="0.1" class="form-control" name="pso_c1" value="1.5"></div>
         <div class="mb-3"><label class="form-label">Coeficiente social (C2)</label><input type="number" step="0.1" class="form-control" name="pso_c2" value="1.5"></div>
         <div class="mb-3"><label class="form-label">Factor de inercia (w)</label><input type="number" step="0.1" class="form-control" name="pso_w" value="0.9"></div>
@@ -237,7 +239,7 @@
     } else if (algo === 'AIS') {
       paramsContainer.innerHTML = `
         <h4 class="mt-4">Parámetros AIS</h4>
-        <div class="mb-3"><label class="form-label">Número de anticuerpos</label><input type="number" class="form-control" name="ais_antibodies" value="100"></div>
+        <div class="mb-3"><label class="form-label">Número de anticuerpos</label><input type="number" step="10" class="form-control" name="ais_antibodies" value="100"></div>
         <div class="mb-3"><label class="form-label">Tasa de clonación</label><input type="number" step="0.1" class="form-control" name="ais_cloning" value="3"></div>
         <div class="mb-3"><label class="form-label">Parámetro α</label><input type="number" step="0.1" class="form-control" name="ais_alpha" value="2"></div>
         <div class="mb-3"><label class="form-label">Parámetro β</label><input type="number" step="0.1" class="form-control" name="ais_beta" value="1"></div>
@@ -246,7 +248,7 @@
     } else if (algo === 'DE') {
       paramsContainer.innerHTML = `
         <h4 class="mt-4">Parámetros DE</h4>
-        <div class="mb-3"><label class="form-label">Tamaño de población</label><input type="number" class="form-control" name="de_population" value="60"></div>
+        <div class="mb-3"><label class="form-label">Tamaño de población</label><input type="number" step="10" class="form-control" name="de_population" value="60"></div>
         <div class="mb-3"><label class="form-label">Factor de mutación (F)</label><input type="number" step="0.1" class="form-control" name="de_mutation" value="0.9"></div>
         <div class="mb-3"><label class="form-label">Tasa de cruza (CR)</label><input type="number" step="0.1" class="form-control" name="de_crossover" value="0.5"></div>
         <div class="mb-3"><label class="form-label">Número de iteraciones</label><input type="number" class="form-control" name="de_iterations" value="100"></div>
@@ -256,7 +258,7 @@
         <h4 class="mt-4">Parámetros MFO</h4>
         <div class="mb-3">
           <label class="form-label">Número de Polillas (N)</label>
-          <input type="number" class="form-control" name="mfo_particles" value="50">
+          <input type="number" step="10" class="form-control" name="mfo_particles" value="50">
         </div>
         <div class="mb-3">
           <label class="form-label">Número de iteraciones</label>
@@ -301,21 +303,26 @@
     }
   });
 
-  function generateRandomScheduling() {
+function generateRandomScheduling() {
     const taskTextArea = document.getElementById('scheduling_tasks');
     const machineInput = document.getElementById('scheduling_machines');
+    const taskCountInput = document.getElementById('taskCount');
     
     // 1. Generar número de máquinas al azar (entre 2 y 5)
-    const numMachines = Math.floor(Math.random() * 4) + 2;
-    machineInput.value = numMachines;
+    if (!machineInput.value) {
+        machineInput.value = Math.floor(Math.random() * 5) + 2;
+    }
 
-    // 2. Generar número de tareas al azar (entre 5 y 15)
-    const numTasks = Math.floor(Math.random() * 11) + 5;
-    
+    if (!taskCountInput.value) {
+        taskCountInput.value = Math.floor(Math.random() * 10) + 5;
+    }
+
+    const taskCount = parseInt(taskCountInput.value, 10);
+
     let taskList = [];
     const nombres = ['Tarea', 'Job', 'Proceso', 'Carga', 'Fix'];
     
-    for (let i = 1; i <= numTasks; i++) {
+    for (let i = 1; i <= taskCount; i++) {
         const nombreAleatorio = nombres[Math.floor(Math.random() * nombres.length)];
         const duracion = Math.floor(Math.random() * 41) + 5; // Duración entre 5 y 45
         taskList.push(`${nombreAleatorio}_${i}, ${duracion}`);
@@ -334,12 +341,22 @@ function updateUIForProblemType(type) {
     const desc = document.getElementById('problem-desc');
     const lbInput = document.getElementById('lb');
     const ubInput = document.getElementById('ub');
-    
+    const machineInput = document.getElementById('scheduling_machines');
+    const taskCountInput = document.getElementById('taskCount');
+    const itemCount = document.getElementById('itemCount');
+    const knapSackSize = document.getElementById('knapsack_capacity');
     // Reset de visibilidad de los grupos de problema
     tspGroup.style.display = 'none';
     schedulingGroup.style.display = 'none';
     mathGroup.style.display = 'none';
     knapsackGroup.style.display = 'none';
+    lbInput.disabled = false;
+    ubInput.disabled = false;
+    machineInput.value = null;
+    taskCountInput.value = null;
+    itemCount.value = null;
+    knapSackSize.value = null;
+
     // Dentro de updateUIForProblemType(type)...
 
 
@@ -353,10 +370,7 @@ function updateUIForProblemType(type) {
     if (type === 'categorical') {
         schedulingGroup.style.display = 'block';
         desc.innerHTML = "Asigna tareas a máquinas para minimizar el tiempo total (Makespan).";
-        
-        if(document.getElementById('scheduling_tasks').value === "") {
-            document.getElementById('scheduling_tasks').value = "Tarea A, 10\nTarea B, 15\nTarea C, 5\nTarea D, 20\nTarea E, 8";
-        }
+        generateRandomScheduling()
     }
     else if (type === 'function') {
         mathGroup.style.display = 'block';
@@ -373,10 +387,8 @@ function updateUIForProblemType(type) {
         ubInput.value = 1;
         lbInput.disabled = true;
         ubInput.disabled = true;
-        
-        if(document.getElementById('knapsack_items').value === "") {
-            document.getElementById('knapsack_items').value = "Brújula, 40, 2\nSaco, 100, 5\nComida, 50, 10\nBotiquín, 70, 3";
-        }
+        generateRandomItems()
+
     } 
     else if (type === 'tsp') {
         tspGroup.style.display = 'block';
@@ -384,13 +396,24 @@ function updateUIForProblemType(type) {
         lbInput.disabled = false;
         ubInput.value = 100;
         lbInput.value = 0;
+        generateRandomCities()
     }
+
 }
 
 function generateRandomItems() {
     const itemTextArea = document.getElementById('knapsack_items');
-    const itemCountInput = document.getElementById('randomItemCount');
-    
+    const itemCountInput = document.getElementById('itemCount');
+    const knapSackCapacity = document.getElementById('knapsack_capacity');
+
+    if (!itemCountInput.value) {
+        itemCountInput.value = (Math.floor(Math.random() * 10) + 2);
+    }
+
+      if (!knapSackCapacity.value) {
+        knapSackCapacity.value = (Math.floor(Math.random() *itemCountInput.value)+3)*10;
+    }
+
     const numItems = parseInt(itemCountInput.value);
     
     if (isNaN(numItems) || numItems < 1) {
@@ -424,6 +447,11 @@ function generateRandomCities() {
     const lbEl = document.getElementById('lb');
     const ubEl = document.getElementById('ub');
 
+    if (!cityInput.value){
+      cityInput.value = (Math.floor(Math.random() * 10) + 2);
+    }
+    
+
     // Validación: Si los elementos no existen en el DOM, salimos de la función sin error
     if (!lbEl || !ubEl) {
         console.error("No se encontraron los inputs de límites (lb o ub) con ese ID.");
@@ -453,13 +481,6 @@ function generateRandomCities() {
     }
 
     textArea.value = cityList.join('\n');
-}
-function generateRandomBits() {
-    const bitInput = document.getElementById('bit_length');
-    // Sugiere una longitud al azar entre 8 y 64 bits
-    const suggestion = [8, 16, 32, 64, 128];
-    const randomValue = suggestion[Math.floor(Math.random() * suggestion.length)];
-    bitInput.value = randomValue;
 }
 
 function renderMath() {

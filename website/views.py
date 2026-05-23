@@ -209,8 +209,7 @@ def MFO(objf, lb, ub, dim, N, Max_iter, b=1, selection_mode="Adaptativo", repres
             if selection_mode == "Mejor Flama":
                 flame = flames[0]
             elif selection_mode == "Adaptativo":
-                idx = i if i < flame_no else flame_no - 1
-                flame = flames[idx]
+                flame = flames[i%flame_no]
             else:
                 flame = flames[flame_no-1]
             distance = np.abs(flame - moths[i])
@@ -262,6 +261,7 @@ def run_algorithm():
         algo = data.get('algorithm')
         plot_data = None
         params = {}
+        mode = data.get('optimization_type', 'min')  
         
         # --- PHASE 1: PREPARE THE PROBLEM ---
         if problem_type == 'tsp':
@@ -291,8 +291,8 @@ def run_algorithm():
             
             dim = len(cities)
             lb, ub = 0, 1 
-            mode = "min"
             expr_str = "Problema del Viajero"
+
             def objf(vec):
                 route = np.argsort(vec)
                 dist = 0
@@ -300,9 +300,16 @@ def run_algorithm():
                     c1 = cities[route[i]]
                     c2 = cities[route[(i + 1) % len(route)]]
                     dist += np.sqrt((c1[0]-c2[0])**2 + (c1[1]-c2[1])**2)
+                
+                # Si el modo es MAX, retornamos la distancia negativa 
+                # (asumiendo que tus algoritmos siempre MINIMIZAN internamente)
+                if mode == 'max':
+                    return -dist
+                
                 return dist
             
             plot_data = {"type": "tsp", "cities": cities}
+            
         elif problem_type == 'knapsack':
             raw_items = data.get('knapsack_items', '').strip().split('\n')
             capacity = float(data.get('knapsack_capacity', 15))
@@ -318,23 +325,46 @@ def run_algorithm():
             items = np.array(items)
             dim = len(items)
             lb, ub = 0, 1
-            mode = "max"
             expr_str = "Problema de la Mochila"
-            def objf(vec):
-                selection = np.round(vec)
-                total_value = np.sum(selection * items[:, 0])
-                total_weight = np.sum(selection * items[:, 1])
-                
-                if total_weight > capacity:
-                    exceso_discreto = total_weight - capacity
-                    castigo_principal = 10000 * exceso_discreto
-                    peso_continuo = np.sum(vec * items[:, 1])
-                    return castigo_principal + (10 * peso_continuo)
+
+            if mode == 'max':
+                def objf(vec):
+                    selection = np.round(vec)
+                    total_value = np.sum(selection * items[:, 0])
+                    total_weight = np.sum(selection * items[:, 1])
                     
-                return -total_value
+                    if total_weight > capacity:
+                        exceso_discreto = total_weight - capacity
+                        castigo_principal = 10000 * exceso_discreto
+                        peso_continuo = np.sum(vec * items[:, 1])
+                        return castigo_principal + (10 * peso_continuo)
+                        
+                    return -total_value
+
+            else: # Modo MIN: Buscar lo más barato, pero llenando la mochila
+                def objf(vec):
+                    selection = np.round(vec)
+                    total_value = np.sum(selection * items[:, 0])
+                    total_weight = np.sum(selection * items[:, 1])
+                    
+                    # 1. Penalización por Exceso (Igual que antes)
+                    if total_weight > capacity:
+                        exceso = total_weight - capacity
+                        return 1e9 + (exceso * 1000) 
+
+                    # 2. Penalización por Mochila Vacía o poco llena
+                    # Calculamos cuánto espacio sobra
+                    espacio_libre = capacity - total_weight
+                    
+                    # El '1000' es el factor de peso. Debe ser lo suficientemente alto 
+                    # para que valga más la pena meter un objeto barato que dejar el hueco.
+                    return total_value + (espacio_libre * 1000)
+
             plot_data = {"type": "knapsack", "items_count": dim}
 
-        elif problem_type == 'categorical':
+              
+        
+        elif problem_type == 'categorical':       
             raw_tasks = data.get('scheduling_tasks', '').strip().split('\n')
             num_machines = int(data.get('scheduling_machines', 3))
             
@@ -349,7 +379,6 @@ def run_algorithm():
             
             dim = len(duraciones)
             lb, ub = 0, num_machines - 1
-            mode = "min" 
             
             def objf(vec):
                 asignacion = np.round(vec).astype(int)
@@ -360,71 +389,20 @@ def run_algorithm():
                     m_idx = max(0, min(m_idx, num_machines - 1))
                     cargas[m_idx] += duraciones[i]
                 
-                return float(np.max(cargas))
+                if mode == "min":
+                    # balancear: minimizar la máquina más cargada
+                    return float(np.max(cargas))
+                elif mode == "max":
+                    # extender: maximizar la máquina más cargada
+                    return -float(np.max(cargas))  
 
             plot_data = {
                 "type": "scheduling", 
                 "num_machines": num_machines,
                 "durations": duraciones
             }
-        elif problem_type == 'bn_function':
-            expr_str = data.get('function', 'x**2')
-            expr_str = expr_str.replace('^', '**').replace(' ', '')
-            
-            dim = int(data.get('dim', 1))
-            bit_length = int(data.get('bit_length', 10))
-            
-            plot_lb = float(data.get('lb', -5))
-            plot_ub = float(data.get('ub', 5))
-            
-            lb = 0 
-            ub = 1 
-            
-            mode = data.get('optimization_type', 'min')
-            
-            from sympy.parsing.sympy_parser import standard_transformations, implicit_multiplication_application
-            transformations = (standard_transformations + (implicit_multiplication_application,))
-            
-            if dim == 1: 
-                x, y = symbols('x y')
-                expr = parse_expr(expr_str, transformations=transformations).subs(y, 0)
-                f_sym = lambdify((x,), expr, modules=["numpy", "math"])
-            elif dim == 2:
-                x, y = symbols('x y')
-                expr = parse_expr(expr_str, transformations=transformations)
-                f_sym = lambdify((x, y), expr, modules=["numpy", "math"])
-            else:
-                expr = parse_expr(expr_str, transformations=transformations)
-                f_sym = lambdify(symbols(f'x0:{dim}'), expr, modules=["numpy", "math"])
 
-            def f_original(vec):
-                try:
-                    args = list(vec)
-                    res = f_sym(args[0]) if dim == 1 else f_sym(*args)
-                    
-                    final_val = float(res.evalf()) if hasattr(res, 'evalf') else float(res)
-                    if not np.isfinite(final_val):
-                        return 1e18
-                    return final_val
-                except (ZeroDivisionError, OverflowError, TypeError):
-                    return 1e18 
-                    
-            def objf(vec):
-                bits = np.round(np.clip(vec, 0, 1)).astype(int)
-                val = f_original(bits)
-                mode_local = data.get('optimization_type', 'min')
-                return -val if mode_local == "max" else val
 
-            if dim == 1:
-                xs = np.linspace(plot_lb, plot_ub, 200)
-                ys = [f_original([xi]) for xi in xs]
-                plot_data = {"type": "function", "x": xs.tolist(), "y": ys}
-            elif dim == 2:
-                xs = np.linspace(plot_lb, plot_ub, 50)
-                ys = np.linspace(plot_lb, plot_ub, 50)
-                X, Y = np.meshgrid(xs, ys)
-                Z = np.array([[f_original([X[i,j], Y[i,j]]) for j in range(50)] for i in range(50)])
-                plot_data = {"type": "function", "x": xs.tolist(), "y": ys.tolist(), "z": Z.tolist()}
         else:
             expr_str = data.get('function', 'x**2')
             expr_str = expr_str.replace('^', '**')
@@ -432,7 +410,6 @@ def run_algorithm():
             dim = int(data.get('dim', 1))
             lb = float(data.get('lb', -5))
             ub = float(data.get('ub', 5))
-            mode = data.get('optimization_type', 'min')
             x, y = symbols('x y')
             
             from sympy.parsing.sympy_parser import standard_transformations, implicit_multiplication_application
@@ -581,27 +558,23 @@ def run_algorithm():
         else:
             latex_func = f"f(x) = {latex(expr)}" if dim == 1 else f"f(x, y) = {latex(expr)}"
 
-        datos_mochila = []
+        datos_mochila = [[], 0]
         if problem_type == 'knapsack':
             seleccion_final = np.round(best_sol)
             peso_final = np.sum(seleccion_final * items[:, 1])
             
             solucion_plana = seleccion_final.flatten()
             for i in range(dim):
-                datos_mochila.append({
+                datos_mochila[0].append({
                     'nombre': nombre_items[i],
                     'peso': float(items[i, 1]),
                     'valor': float(items[i, 0]),
                     'seleccion': bool(solucion_plana[i] >= 0.5) 
                 }) 
+            datos_mochila[1] = float(data.get('knapsack_capacity', 15))
         else:
             peso_final = None
 
-        bit_string = ""
-        if problem_type == 'bn_function':
-            bit_string = "".join(str(int(b)) for b in np.round(best_sol))
-            latex_func = f"f(bits) = {latex(expr)}"
-                        
         return render_template(
             'result.html',
             algorithm=algo,
@@ -617,7 +590,6 @@ def run_algorithm():
             items_data=datos_mochila,
             scheduling_data=datos_scheduling,
             num_machines=num_machines,
-            bit_string=bit_string,
         )
     except Exception as e:
         return render_template("main.html", error=f"Error Crítico: {str(e)}")
