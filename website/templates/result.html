@@ -3,29 +3,28 @@
 {% block content %}
 
 {% set algo_names = {
-    'GA': 'Algoritmo Genético',
-    'PSO': 'Enjambre de Partículas',
-    'AIS': 'Sistema Inmune Artificial',
-    'DE': 'Evolución Diferencial',
-    'ACO': 'Colonia de Hormigas',
-    'MFO': 'Polilla-Flama'
+'GA': 'Algoritmo Genético',
+'PSO': 'Enjambre de Partículas',
+'AIS': 'Sistema Inmune Artificial',
+'DE': 'Evolución Diferencial',
+'ACO': 'Colonia de Hormigas',
+'MFO': 'Polilla-Flama'
 } %}
 {% set full_algo_name = algo_names[algorithm] if algorithm in algo_names else algorithm %}
 
 {% set algo_colors = {
-    'GA': 'bg-success text-light',
-    'PSO': 'bg-primary text-light',
-    'AIS': 'bg-warning text-dark',
-    'DE': 'bg-info text-light',
-    'ACO': 'bg-danger text-light',
-    'MFO': 'bg-dark text-white'
+'GA': 'bg-success text-light',
+'PSO': 'bg-primary text-light',
+'AIS': 'bg-warning text-dark',
+'DE': 'bg-info text-light',
+'ACO': 'bg-danger text-light',
+'MFO': 'bg-dark text-white'
 } %}
 {% set current_badge_color = algo_colors[algorithm] if algorithm in algo_colors else 'bg-dark' %}
 
 <div class="container mt-3 mt-md-5 pt-3 pt-md-5">
 
     <div class="row mb-4">
-        
         <div class="col-lg-7 mb-3 mb-lg-0">
             <div class="card shadow-sm h-100">
                 <div class="card-body">
@@ -35,77 +34,61 @@
                             <tbody>
                                 <tr>
                                     <th class="table-light w-50">Algoritmo</th>
-                                    <td><span class="badge {{ current_badge_color }} fs-6">{{ full_algo_name }}</span></td>
+                                    <td><span class="badge {{ current_badge_color }} fs-6">{{ full_algo_name }}</span>
+                                    </td>
                                 </tr>
-                                
                                 <tr>
                                     <th class="table-light align-middle">Problema</th>
                                     <td class="fs-6">
                                         {% if plot_data and plot_data.type == 'tsp' %}
-                                            <span class="fw-bold text-info">Problema del Viajante (TSP)</span>
+                                        <span class="fw-bold text-info">Problema del Viajante (TSP)</span>
                                         {% elif plot_data and plot_data.type == 'knapsack' %}
-                                            <span class="fw-bold text-success">Problema de la Mochila</span>
+                                        <span class="fw-bold text-primary">Problema de la Mochila</span>
                                         {% elif scheduling_data %}
-                                            <span class="fw-bold text-warning">Job Scheduling</span>
+                                        <span class="fw-bold text-warning">Job Scheduling</span>
                                         {% else %}
-                                            \( {{ function }} \) 
+                                        \( {{ function }} \)
                                         {% endif %}
                                     </td>
                                 </tr>
-                                
-<tr>
-                                    <th class="table-light">
-                                        {% if plot_data and plot_data.type == 'tsp' %}
-                                            Ciudades
-                                        {% elif plot_data and plot_data.type == 'knapsack' %}
-                                            Capacidad de la Mochila
-                                        {% elif scheduling_data %}
-                                            Máquinas
-                                        {% else %}
-                                            Dimensión
-                                        {% endif %}
-                                    </th>
-
-                                    <td>
-                                        {% if plot_data and plot_data.type == 'knapsack' and best_weight %}
-                                            {{ best_weight|round(2) }} kg
-                                        {% elif scheduling_data %}
-                                            {{ num_machines }}
-                                        {% else %}
-                                            {{ dim }}
-                                        {% endif %}
-                                    </td>
-                                </tr>
-
-                                {% if scheduling_data %}
                                 <tr>
                                     <th class="table-light">
-                                        Tareas
+                                        {% if plot_data and plot_data.type == 'tsp' %} Ciudades
+                                        {% elif plot_data and plot_data.type == 'knapsack' %} Capacidad de la Mochila
+                                        {% elif scheduling_data %} Máquinas
+                                        {% else %} Dimensión {% endif %}
                                     </th>
                                     <td>
-                                        {# Usamos el filtro length para contar cuántos elementos hay en la lista #}
-                                        {{ scheduling_data|length }}
+                                        {% if plot_data and plot_data.type == 'knapsack' and best_weight %}
+                                        {{ best_weight|round(2) }} kg
+                                        {% elif scheduling_data %}
+                                        {{ num_machines }}
+                                        {% else %}
+                                        {{ dim }}
+                                        {% endif %}
                                     </td>
+                                </tr>
+                                {% if scheduling_data %}
+                                <tr>
+                                    <th class="table-light">Tareas</th>
+                                    <td>{{ scheduling_data|length }}</td>
                                 </tr>
                                 {% elif plot_data and plot_data.type == 'knapsack' %}
                                 <tr>
-                                    <th class="table-light">
-                                        Peso final de la mochila 
-                                    </th>
-                                    <td>
-                                        {{ best_weight|round(2) }} kg
-                                    </td>
+                                    <th class="table-light">Peso final de la mochila</th>
+                                    <td>{{ best_weight|round(2) }} kg</td>
                                 </tr>
-                                
                                 {% endif %}
                                 <tr>
                                     <th class="table-light">
-                                        {% if plot_data and plot_data.type == 'tsp' %} Mejor Distancia  
+                                        {% if plot_data and plot_data.type == 'tsp' %} Mejor Distancia
                                         {% elif plot_data and plot_data.type == 'knapsack' %} Valor Total Obtenido
                                         {% else %} Mejor Fitness {% endif %}
                                     </th>
                                     <td class="fw-bold text-success fs-5">
-                                        {{ " $" if plot_data and plot_data.type == 'knapsack' else "" }}{{ best_value|round(4) }}{{ " Metros" if plot_data and plot_data.type == 'tsp' else "" }}
+                                        {{ " $" if plot_data and plot_data.type == 'knapsack' else "" }}{{ "%g" |
+                                        format(best_value | round(4) | float) }}{{ " Metros" if plot_data and
+                                        plot_data.type == 'tsp' else "" }}{{ "s" if scheduling_data else "" }}
                                     </td>
                                 </tr>
                             </tbody>
@@ -129,23 +112,23 @@
                             </thead>
                             <tbody>
                                 {% if params %}
-                                    {% for key, value in params.items() %}
-                                    <tr>
-                                        <td class="text-secondary">{{ key }}</td>
-                                        <td class="text-end fw-bold">{{ value }}</td>
-                                    </tr>
-                                    {% endfor %}
+                                {% for key, value in params.items() %}
+                                <tr>
+                                    <td class="text-secondary">{{ key }}</td>
+                                    <td class="text-end fw-bold">{{ value }}</td>
+                                </tr>
+                                {% endfor %}
                                 {% else %}
-                                    <tr>
-                                        <td colspan="2" class="text-center text-muted">No hay parámetros definidos</td>
-                                    </tr>
+                                <tr>
+                                    <td colspan="2" class="text-center text-muted">No hay parámetros definidos</td>
+                                </tr>
                                 {% endif %}
                                 {% if mode %}
-                                    <tr>
-                                        <td class="text-secondary">Modo</td>
-                                        <td class="text-end fw-bold">{{ "Maximización" if mode == 'max' else "Minimización" }}</div>
-                                </td>
-                                    </tr>
+                                <tr>
+                                    <td class="text-secondary">Modo</td>
+                                    <td class="text-end fw-bold">{{ "Maximización" if mode == 'max' else "Minimización"
+                                        }}</td>
+                                </tr>
                                 {% endif %}
                             </tbody>
                         </table>
@@ -153,233 +136,421 @@
                 </div>
             </div>
         </div>
-        
     </div>
 
-<div class="row mb-4">
-    <div class="col-12">
-        <div class="card shadow-sm">
-            <div class="card-header bg-secondary text-white">Línea de Tiempo</div>
-            <div class="table-responsive">
-                <table class="table text-center align-middle mb-0">
-                    {% set total_iter = history|length %}
-                    {% set idx0 = 0 %}
-                    {% set idx1 = (total_iter // 3) if total_iter > 3 else 0 %}
-                    {% set idx2 = (2 * total_iter // 3) if total_iter > 3 else 0 %}
-                    {% set idx_final = total_iter - 1 %}
-
-                    {% set p0 = history[idx0] %}
-                    {% set p1 = history[idx1] %}
-                    {% set p2 = history[idx2] %}
-                    {% set p_final = history[idx_final] %}
-
-                    <thead class="table-light">
-                        <tr class="small text-uppercase text-muted">
-                            <th>Generación {{ p0.generation }}</th>
-                            <th>Generación {{ p1.generation }}</th>
-                            <th>Generación {{ p2.generation }}</th>
-                            <th>Generación {{ p_final.generation }}</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr class="fs-5">
-                            {% for p in [p0, p1, p2, p_final] %}
-                            <td class="py-3">
-                                <div class="fw-bold text-dark">{{ " $" if plot_data and plot_data.type == 'knapsack' else "" }}{{ "%g" | format(p.fitness | round(4) | float) }}{{ "s" if scheduling_data else "" }}{{ "m" if plot_data and plot_data.type == 'tsp' else "" }}</div>
-                                
-                                {% if plot_data.type == 'knapsack' %}
-                                    <div class="text-muted small" style="font-size: 0.65rem;">
-                                        Lleva: {{ (p.solution | sum | round(4) | int) }} ítems
-                                    </div>
-                                {% elif scheduling_data %}
-
-                                {% elif plot_data.type != 'tsp' %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-secondary text-white">Línea de Tiempo</div>
+                <div class="table-responsive">
+                    <table class="table text-center align-middle mb-0">
+                        {% set total_iter = history|length %}
+                        {% set idx0 = 0 %}
+                        {% set idx1 = (total_iter // 3) if total_iter > 3 else 0 %}
+                        {% set idx2 = (2 * total_iter // 3) if total_iter > 3 else 0 %}
+                        {% set idx_final = total_iter - 1 %}
+                        {% set p0 = history[idx0] %}
+                        {% set p1 = history[idx1] %}
+                        {% set p2 = history[idx2] %}
+                        {% set p_final = history[idx_final] %}
+                        <thead class="table-light">
+                            <tr class="small text-uppercase text-muted">
+                                <th>Generación {{ p0.generation }}</th>
+                                <th>Generación {{ p1.generation }}</th>
+                                <th>Generación {{ p2.generation }}</th>
+                                <th>Generación {{ p_final.generation }}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="fs-5">
+                                {% for p in [p0, p1, p2, p_final] %}
+                                <td class="py-3">
+                                    <div class="fw-bold text-dark">{{ " $" if plot_data and plot_data.type == 'knapsack'
+                                        else "" }}{{ "%g" | format(p.fitness | round(4) | float) }}{{ "s" if
+                                        scheduling_data else "" }}{{ "m" if plot_data and plot_data.type == 'tsp' else
+                                        "" }}</div>
+                                    {% if plot_data.type == 'knapsack' %}
+                                    <div class="text-muted small" style="font-size: 0.65rem;">Lleva: {{ (p.solution |
+                                        sum | round(4) | int) }} ítems</div>
+                                    {% elif not scheduling_data and plot_data.type != 'tsp' %}
                                     <div class="text-muted" style="font-size: 0.7rem;">
-                                        ({% for val in p.solution -%}
-                                            {{ (val | round(4)) | float }}{{ ", " if not loop.last }}
-                                        {%- endfor %})
+                                        ({% for val in p.solution -%}{{ (val | round(4)) | float }}{{ ", " if not
+                                        loop.last }}{%- endfor %})
                                     </div>
-                                {% endif %}
-                            </td>
-                            {% endfor %}
-                        </tr>
-                        <tr class="table-light">
-                            <td colspan="3" class="text-start small text-muted ps-3">
-                            </td>
-                            <td class="text-end pe-3">
-                                {% set ns = namespace(eff = 0, last = -1) %}
-                                {% for h in history %}
-                                    {% if h.fitness != ns.last %}{% set ns.eff = h.generation %}{% endif %}
-                                    {% set ns.last = h.fitness %}
+                                    {% endif %}
+                                </td>
                                 {% endfor %}
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-    <div class="card-footer bg-white border-top-0 py-4 px-4">
-    {% set total_iter = history|length %}
-    {% set ns = namespace(eff = 0, last = -1) %}
-    {% for h in history %}
-        {% if h.fitness != ns.last %}{% set ns.eff = h.generation %}{% endif %}
-        {% set ns.last = h.fitness %}
-    {% endfor %}
-    
-    {% set progress_percent = (ns.eff / (total_iter - 1)) * 100 if total_iter > 1 else 100 %}    
-    <div class="progress shadow-sm mb-2" style="height: 10px; background-color: #e9ecef; overflow: visible; position: relative;">
-        <div class="progress-bar progress-bar-striped progress-bar-animated {{ current_badge_color.split(' ')[0] }}" 
-             role="progressbar" 
-             style="width: {{ progress_percent }}%; border-radius: 5px;">
-        </div>
-        
-        <div style="position: absolute; left: {{ progress_percent }}%; top: -10px; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center;">
-            <div class="badge {{ current_badge_color }} shadow-sm" style="font-size: 0.7rem; transform: translateY(-10px); white-space: nowrap;">{{ progress_percent|round|int }}%</div>
-            <i class="bi bi-geo-fill text-primary" style="font-size: 1.2rem; margin-top: -5px;"></i>
-        </div>
-    </div>
-
-    <div class="d-flex justify-content-between small text-muted mt-1">
-        <span>Generación 0</span>
-        <span>Generación {{ total_iter - 1 }}</span>
-    </div>
-    
-    <div class="mt-4 text-center">
-        <p class="small text-muted mb-0">
-            El algoritmo encontró la mejor solución en la generacion <strong>{{ ns.eff }}</strong> del proceso.
-            {% if progress_percent < 30 %}
-                <br><span class="text-warning small"><i class="bi bi-exclamation-triangle"></i> Convergencia temprana.</span>
-            {% endif %}
-        </p>
-    </div>
-</div>
-
-
-<div class="row mb-5">
-    <div class="{% if plot_data and plot_data.type == 'tsp' %}col-lg-8{% else %}col-12{% endif %}">
-        
-        {% if plot_data and plot_data.type == 'knapsack' %}
-        <div>
-        <div class="card shadow-sm h-100" style="max-height: 500px;">
-            <div class="card-header {{ current_badge_color }} text-white">
-                    <i class="bi bi-bag-check-fill me-2"></i>Contenido de la Mochila
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
+                <div class="card-footer bg-white border-top-0 py-4 px-4">
+                    {% set ns = namespace(eff = 0, last = -1) %}
+                    {% for h in history %}
+                    {% if h.fitness != ns.last %}{% set ns.eff = h.generation %}{% endif %}
+                    {% set ns.last = h.fitness %}
+                    {% endfor %}
+                    {% set progress_percent = (ns.eff / (total_iter - 1)) * 100 if total_iter > 1 else 100 %}
+                    <div class="progress shadow-sm mb-2"
+                        style="height: 10px; background-color: #e9ecef; overflow: visible; position: relative;">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated {{ current_badge_color.split(' ')[0] }}"
+                            role="progressbar" style="width: {{ progress_percent }}%; border-radius: 5px;"></div>
+                        <div
+                            style="position: absolute; left: {{ progress_percent }}%; top: -10px; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center;">
+                            <div class="badge {{ current_badge_color }} shadow-sm"
+                                style="font-size: 0.7rem; transform: translateY(-10px); white-space: nowrap;">{{
+                                progress_percent|round|int }}%</div>
+                            <i class="bi bi-geo-fill text-primary" style="font-size: 1.2rem; margin-top: -5px;"></i>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-between small text-muted mt-1">
+                        <span>Generación 0</span>
+                        <span>Generación {{ total_iter - 1 }}</span>
+                    </div>
+                    <div class="mt-4 text-center">
+                        <p class="small text-muted mb-0">
+                            El algoritmo encontró la mejor solución en la generacion <strong>{{ ns.eff }}</strong> del
+                            proceso.
+                            {% if progress_percent < 30 %} <br><span class="text-warning small"><i
+                                        class="bi bi-exclamation-triangle"></i> Convergencia temprana.</span>{% endif %}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-5">
+        <div class="{{ 'col-lg-8' if plot_data and plot_data.type == 'tsp' else 'col-12' }}">
+            {% if plot_data and plot_data.type == 'knapsack' %}
+            <div class="card shadow-sm h-100" id="knapsackCard"
+                style="max-height: 500px; transition: max-height 0.3s ease-in-out;">
+                <div
+                    class="card-header {{ current_badge_color }} text-white d-flex justify-content-between align-items-center">
+                    <div class="text-center m-0" style="flex: 2;">
+                        <span class="bi bi-bag-check-fill me-2 fw-bold">Contenido de la Mochila</span>
+                    </div>
+                    <button type="button" class="btn btn-sm text-white border-0 shadow-none"
+                        onclick="toggleTableExpand('knapsackCard', 'expandIconKnapsack')"
+                        style="background-color: rgba(255, 255, 255, 0.2);">
+                        <i class="bi bi-arrows-angle-expand" id="expandIconKnapsack"></i>
+                    </button>
+                </div>
+
                 <div class="card-body p-0" style="overflow-y: auto;">
                     <table class="table table-sm table-hover align-middle mb-0">
                         <thead class="table-light sticky-top">
-                            <tr class="small text-muted">
-                                <th class="text-center" style="width: 60px;">Estado</th>
-                                <th>Ítem</th>
-                                <th class="text-end">Peso</th>
-                                <th class="text-end">Valor</th>
+                            <tr class="small text-muted" style="user-select: none;">
+                                <th class="text-center" style="width: 60px; cursor: pointer;"
+                                    onclick="sortTable('knapsack-body', 0, 'num', this)">
+                                    Estado <i class="bi bi-arrow-down-up ms-1"></i>
+                                </th>
+                                <th style="cursor: pointer;" onclick="sortTable('knapsack-body', 1, 'str', this)">
+                                    Ítem <i class="bi bi-arrow-down-up ms-1"></i>
+                                </th>
+                                <th class="text-end" style="cursor: pointer;"
+                                    onclick="sortTable('knapsack-body', 2, 'num', this)">
+                                    Peso <i class="bi bi-arrow-down-up ms-1"></i>
+                                </th>
+                                <th class="text-end" style="cursor: pointer;"
+                                    onclick="sortTable('knapsack-body', 3, 'num', this)">
+                                    Valor <i class="bi bi-arrow-down-up ms-1"></i>
+                                </th>
                             </tr>
                         </thead>
-                        <tbody id="knapsack-body">
-                            {% for item in items_data[0] %}
+                        <tbody id="knapsack-body"> {% for item in items_data[0] %}
                             <tr>
-                                <td class="text-center">
-                                    {# Verificamos si el ítem está en la mejor solución (asumiendo que best_solution tiene 1s y 0s) #}
+                                <td class="text-center" data-sort="{{ '1' if item.seleccion else '0' }}">
                                     {% if item.seleccion %}
-                                        <span class="badge rounded-pill bg-light text-muted"></span>
-                                            <i class="bi bi-x">Si</i>
-                                            
-                                        </span>
+                                    <span class="badge rounded-pill bg-success"><i class="bi bi-check-lg"></i></span>
                                     {% else %}
-                                        <span class="badge rounded-pill bg-success"></span>
-                                            <i class="bi bi-check-lg">No</i>
-                                        </span>
+                                    <span class="badge rounded-pill bg-danger text-white"><i class="bi bi-x"></i></span>
                                     {% endif %}
                                 </td>
-                                <td>
-                                    <span class="fw-bold small">{{ item.nombre }}</span>
-                                </td>
+                                <td><span class="fw-bold small">{{ item.nombre }}</span></td>
                                 <td class="text-end font-monospace">{{ item.peso }}</td>
-                                <td class="text-end font-monospace text-primary">${{ item.valor }}</td>
+                                <td class="text-end font-monospace text-primary" data-sort="{{ item.valor }}">
+                                    ${{ item.valor }}
+                                </td>
                             </tr>
                             {% endfor %}
                         </tbody>
                     </table>
                 </div>
             </div>
+
+            {% elif scheduling_data %}
+
+            <div class="card shadow-sm" id="schedulingCard"
+                style="max-height: 500px; height: fit-content; width: 100%; overflow: hidden; display: flex; flex-direction: column; transition: max-height 0.4s ease-in-out;">
+
+                <div
+                    class="card-header {{ current_badge_color }} text-white d-flex justify-content-between align-items-center">
+
+                    <div class="text-center m-0" style="flex: 2;">
+
+                        <span class="fw-bold" style="font-weight: bold;">Asignación de Tareas</span>
+
+                    </div>
+
+
+
+                    <button type="button" class="btn btn-sm text-white border-0 shadow-none"
+                        onclick="toggleTableExpand('schedulingCard', 'expandIcon')"
+                        style="background-color: rgba(255, 255, 255, 0.2);">
+
+                        <i class="bi bi-arrows-angle-expand" id="expandIcon"></i>
+
+                    </button>
+
+                </div>
+
+                <div class="bg-light p-3 border-bottom border-secondary-subtle" style="z-index: 2;">
+
+                    {% set ns_eff = namespace(total_time=0) %}
+
+                    {% for m in scheduling_data %}
+
+                    {% set ns_eff.total_time = ns_eff.total_time + m[0] %}
+
+                    {% endfor %}
+
+                    {% set num_machines = scheduling_data|length %}
+
+                    {% set efficiency = 0 %}
+
+                    {% if best_value > 0 and num_machines > 0 %}
+
+                    {% set efficiency = (ns_eff.total_time / (best_value * num_machines) * 100) | round(1) %}
+
+                    {% endif %}
+
+
+
+                    {% if efficiency <= 50 %} {% set hue=0 %} {% set lightness=efficiency * 0.9 %} {% else %} {% set
+                        hue=(efficiency - 50) * 2.4 %} {% set lightness=45 %} {% endif %} {% set dynamic_color="hsl(" ~
+                        hue ~ ", 80%, " ~ lightness ~ "%)" %} <div
+                        class="d-flex justify-content-between align-items-end mb-1">
+
+                        <span class="small fw-bold text-muted"><i
+                                class="bi bi-lightning-charge-fill me-1"></i>Eficiencia de Balanceo</span>
+
+                        <span class="badge shadow-sm" style="background-color: {{ dynamic_color }}; color: white;">{{
+                            efficiency
+
+                            }}%</span>
+
+                </div>
+
+                <div class="progress shadow-sm" style="height: 12px; background-color: #dee2e6;">
+
+                    <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar"
+                        style="width: {{ efficiency }}%; background-color: {{ dynamic_color }}; border-radius: 5px;">
+
+                    </div>
+
+                </div>
+
             </div>
 
-         
-        {% elif scheduling_data %}
-        <div>
-        <div class="card shadow-sm h-100" style="max-height: 500px;">
-            <div class="card-header {{ current_badge_color }} text-white">
-                    <i class="bi bi-bag-check-fill me-2"></i>Asignacion de Tareas</div>
-                <div class="card-body p-0" style="overflow-y: auto;">
-                <table class="table">
-                    <thead>
-                        <tr><th>Tarea</th><th>Duración</th><th>Máquina Asignada</th></tr>
+
+
+            <div class="card-body p-0" style="overflow-y: auto; height: auto;">
+
+                <table class="table ...">
+
+                    <thead style="position: sticky; top: 0; z-index: 1020; background-color: white;">
+
+                        <tr class="small text-muted" style="user-select: none;">
+
+                            <th style="width: 10%; cursor: pointer;"
+                                onclick="sortTable('scheduling-body', 0, 'num', this)">
+
+                                Máquina <i class="bi bi-arrow-down-up ms-1 text-muted"></i>
+
+                            </th>
+
+                            <th style="width: 70%; cursor: pointer;"
+                                onclick="sortTable('scheduling-body', 1, 'num', this)">
+
+                                Duración <i class="bi bi-arrow-down-up ms-1 text-muted"></i>
+
+                            </th>
+
+                            <th style="cursor: pointer;" onclick="sortTable('scheduling-body', 2, 'num', this)">
+
+                                Tareas <i class="bi bi-arrow-down-up ms-1 text-muted"></i>
+
+                            </th>
+
+                        </tr>
+
                     </thead>
-                    <tbody>
-                        {% for item in scheduling_data %}
+
+                    <tbody id="scheduling-body">
+
+                        {% set ns = namespace(machine_num=0) %}
+
+                        {% for machine in scheduling_data %}
+
                         <tr>
-                            <td>{{ item.tarea }}</td>
-                            <td>{{ item.duracion }}</td>
-                            <td><span class="badge {{ current_badge_color }}">{{ item.maquina }}</span></td>
+
+                            {% set ns.machine_num = ns.machine_num + 1 %}
+
+                            <td class="align-middle" data-sort="{{ ns.machine_num }}">{{ ns.machine_num }}</td>
+
+                            <td class="fw-bold align-middle" data-sort="{{ machine[0] }}">
+
+                                {% set progress_percent = machine[0]/best_value * 100 %}
+
+                                <div class="progress shadow-sm mb-2"
+                                    style="height: 10px; background-color: #e9ecef; overflow: visible; position: relative;">
+
+                                    <div class="progress-bar progress-bar-animated {{ current_badge_color.split(' ')[0] }}"
+                                        role="progressbar" style="width: {{ progress_percent }}%; border-radius: 5px;">
+
+                                    </div>
+
+
+
+                                </div>
+
+                                <div class="d-flex justify-content-between small text-muted mt-1">
+
+                                    <span>0s</span>
+
+                                    <div class="badge {{ current_badge_color }} shadow-sm"
+                                        style="font-size: 0.9rem; white-space: nowrap;">{{ machine[0]|round|int
+
+                                        }}s</div>
+
+                                    <span>{{ "%g" | format(best_value | round(4) | float) }}s</span>
+
+                                </div>
+
+                            </td>
+
+                            <td data-sort="{{ (machine|length) - 1 }}">
+
+                                {% if machine[1] %}
+
+                                <div style="max-height: 150px; overflow-y: auto; border: 1px solid #dee2e6; border-radius: 4px;">
+
+                                    <table class="table table-sm table-hover mb-0">
+
+                                        <tbody>
+
+                                            {% for task in machine[1:] | sort(attribute=1, reverse=False) %}
+
+                                            <tr class="small">
+
+                                                <td class="table-light" style="width: 70%;">{{ task[0] }}</td>
+
+                                                <td class="text-end" style="width: 30%;">{{ task[1] }}s</td>
+
+                                            </tr>
+                                            
+
+                                            {% endfor %}
+
+                                        </tbody>
+
+                                    </table>
+
+
+                                </div>
+
+                                {% else %}
+
+                                <span class="text-danger small"><i class="bi bi-exclamation-triangle"></i> No
+
+                                    hay tareas</span>
+
+                                {% endif %}
+
+                            </td>
+
                         </tr>
+
                         {% endfor %}
+
                     </tbody>
+
                 </table>
-                </div>
+
             </div>
-            </div>
-        {% else %}
-   <div id="mainPlot" class="plot-container border rounded shadow-sm"></div>
-        {% endif %}
-    </div> {% if plot_data and plot_data.type == 'tsp' %}
-    <div class="col-lg-4 mt-4 mt-lg-0">
-        <div class="card shadow-sm h-100" style="max-height: 500px;">
-            <div class="card-header {{ current_badge_color }} text-white">
-                <i class="bi bi-geo-alt-fill"></i> Ruta
-            </div>
-            <div class="card-body p-0" style="overflow-y: auto;">
-                <table class="table table-sm table-hover mb-0">
-                    <thead class="table-light sticky-top">
-                        <tr class="small">
-                            <th>Orden</th>
-                            <th>Ciudad (x, y)</th>
-                        </tr>
-                    </thead>
-                    <tbody id="itinerary-body">
-                        </tbody>
-                </table>
-            </div>
+
         </div>
+
+    {% else %}
+    <div>
+    <div id="mainPlot" class="plot-container border rounded shadow-sm"></div>
     </div>
     {% endif %}
 </div>
-    <div class="mb-5">
-        <div id="convergencePlot" class="plot-container border rounded shadow-sm"></div>
-    </div>
 
-    
-    {% if algorithm == 'MFO' %}
-        <div class="mb-5">
-            <div class="card shadow-sm border-0">
-                <div class="card-body p-0">
-                    <div id="spiralPlot" class="plot-container" style="height: 400px;"></div>
-                </div>
-                <div class="card-footer small text-muted">
-                    La espiral representa cómo la polilla se acerca a la flama usando la función: 
-                    \( D \cdot e^{bt} \cdot \cos(2\pi t) + Flame \)
-                </div>
+{% if plot_data and plot_data.type == 'tsp' %}
+<div class="col-lg-4 mt-4 mt-lg-0">
+    <div class="card shadow-sm h-100" style="max-height: 500px;">
+        <div class="card-header {{ current_badge_color }} text-white">
+            <i class="bi bi-geo-alt-fill"></i> Ruta
+        </div>
+        <div class="card-body p-0" style="overflow-y: auto;">
+            <table class="table table-sm table-hover mb-0">
+                <thead class="table-light sticky-top">
+                    <tr class="small">
+                        <th>Orden</th>
+                        <th>Ciudad (x, y)</th>
+                    </tr>
+                </thead>
+                <tbody id="itinerary-body"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+</div>
+
+<div class="row mb-5">
+    <div class="col-12">
+        <div class="card shadow-sm">
+            <div class="card-header bg-dark text-white text-center">
+                <span class="bi bi-graph-up me-2 fw-bold">Gráfico de Convergencia</span>
+            </div>
+            <div class="card-body">
+                <div id="convergencePlot" class="plot-container"></div>
             </div>
         </div>
-        {% endif %}
-<br><br>
-    <div class="text-center mb-5">
-        <a href="/" class="btn btn-outline-dark px-5">Realizar Nueva Simulación</a>
     </div>
+</div>
+
+{% if algorithm == 'MFO' %}
+<div class="row mb-5">
+    <div class="col-12">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-dark text-white text-center fw-bold">Mecanismo de Espiral (MFO)</div>
+            <div class="card-body p-0">
+                <div id="spiralPlot" class="plot-container" style="height: 400px;"></div>
+            </div>
+            <div class="card-footer small text-muted">
+                La espiral representa cómo la polilla se acerca a la flama usando la función:
+                \( D \cdot e^{bt} \cdot \cos(2\pi t) + Flame \)
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<div class="text-center mb-5">
+    <a href="/" class="btn btn-outline-dark px-5">Realizar Nueva Simulación</a>
+</div>
 </div>
 
 <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 <script>
-    // 1. Datos base desde Flask
     const config = { responsive: true };
     const commonLayout = {
+        font: { family: "'Quicksand', sans-serif" },
         autosize: true,
         margin: { l: 50, r: 30, b: 50, t: 80 },
         hovermode: 'closest',
@@ -387,29 +558,29 @@
         xaxis: { tickformat: '.4s' }
     };
 
-    const historySolutions = {{ history|map(attribute='solution')|list|safe }};
-    const historyFitness = {{ history|map(attribute='fitness')|list|safe }};
-    const historyData = {{ history|tojson|safe }};
+    const historySolutions = {{ history| map(attribute = 'solution') | list | safe }};
+    const historyFitness = {{ history| map(attribute = 'fitness') | list | safe }};
+    const historyData = {{ history| tojson | safe }};
     const generations = historyData.map(h => h.generation);
 
     // --- GRÁFICO PRINCIPAL (TSP / 1D / 2D) ---
     {% if plot_data and plot_data.type == 'tsp' %}
-        const cities = {{ plot_data.cities|safe }};
+        const cities = {{ plot_data.cities| safe }};
         const lastSolution = historySolutions[historySolutions.length - 1];
         const routeIdx = [...Array(cities.length).keys()].sort((a, b) => lastSolution[a] - lastSolution[b]);
         const sortedCities = routeIdx.map(i => cities[i]);
-        
+
         // Llenar tabla de itinerario
         const tableBody = document.getElementById('itinerary-body');
-        if(tableBody) {
+        if (tableBody) {
             tableBody.innerHTML = sortedCities.map((city, index) => `
-                <tr>
-                    <td style="width: 50px;">
-                        <span class="badge rounded-pill {{ current_badge_color }}" style="min-width: 25px;">${index + 1}</span>
-                    </td>
-                    <td class="font-monospace small">${city[0].toFixed(4)}, ${city[1].toFixed(4)}</td>
-                </tr>
-            `).join('');
+                    <tr>
+                        <td style="width: 50px;">
+                            <span class="badge rounded-pill {{ current_badge_color }}" style="min-width: 25px;">${index + 1}</span>
+                        </td>
+                        <td class="font-monospace small">${city[0].toFixed(4)}, ${city[1].toFixed(4)}</td>
+                    </tr>
+                `).join('');
         }
 
         const plotCities = [...sortedCities, sortedCities[0]];
@@ -418,31 +589,49 @@
             y: plotCities.map(c => c[1]),
             mode: 'lines+markers',
             type: 'scatter',
-            line: {color: '#198754', width: 3},
+            line: { color: '#198754', width: 3 },
             marker: { color: '#dc3545', size: 10 },
             name: 'Ruta Optimizada'
         };
-        Plotly.newPlot('mainPlot', [traceRoute], { ...commonLayout, title: 'Mapa de Ruta Final' }, config);
+        Plotly.newPlot('mainPlot', [traceRoute], { ...commonLayout }, config);
 
-    {% elif dim == 1 %}
-        const traceFunc = { x: {{ plot_data.x|safe }}, y: {{ plot_data.y|safe }}, type: 'scatter', mode: 'lines', name: 'Función' };
-        const traceHist = { 
-            x: historySolutions.map(s => Array.isArray(s) ? s[0] : s), 
-            y: historyFitness, 
-            mode: 'markers', 
-            marker: { color: 'orange', opacity: 0.5, size: 6 }, 
-            name: 'Historial' 
-        };
-        const traceBest = { x: [{{ best_solution[0] }}], y: [{{ best_value }}], mode: 'markers', marker: {color: 'red', size: 12, symbol: 'star'}, name: 'Mejor' };
-        Plotly.newPlot('mainPlot', [traceFunc, traceHist, traceBest], { ...commonLayout, title: 'Función Graficada 1D' }, config);
+ {% elif dim == 1 %}
+    // Se eliminaron los espacios extras en las llaves de Jinja
+    const traceFunc = { 
+        x: {{ plot_data.x | safe }}, 
+        y: {{ plot_data.y | safe }}, 
+        type: 'scatter', 
+        mode: 'lines', 
+        name: 'Función' 
+    };
+    const traceHist = {
+        x: historySolutions.map(s => Array.isArray(s) ? s[0] : s),
+        y: historyFitness,
+        mode: 'markers',
+        marker: { color: 'orange', opacity: 0.5, size: 6 },
+        name: 'Historial'
+    };
+    const traceBest = { 
+        x: [{{ best_solution[0] }}], 
+        y: [{{ best_value }}], 
+        mode: 'markers', 
+        marker: { color: 'red', size: 12, symbol: 'star' }, 
+        name: 'Mejor' 
+    };
+    
+    Plotly.newPlot('mainPlot', [traceFunc, traceHist, traceBest], { ...commonLayout }, config);
 
-{% elif dim == 2 %}
-    const traceSurface = { 
-        x: {{ plot_data.x|safe }}, y: {{ plot_data.y|safe }}, z: {{ plot_data.z|safe }}, 
-        type: 'surface', colorscale: 'Viridis', showscale: false, opacity: 0.8
+    {% elif dim == 2 %}
+    const traceSurface = {
+        x: {{ plot_data.x | safe }}, 
+        y: {{ plot_data.y | safe }}, 
+        z: {{ plot_data.z | safe }},
+        type: 'surface', 
+        colorscale: 'Viridis', 
+        showscale: false, 
+        opacity: 0.8
     };
 
-    // AÑADE ESTO: El rastro de todos los puntos explorados
     const traceHist2D = {
         x: historySolutions.map(s => s[0]),
         y: historySolutions.map(s => s[1]),
@@ -454,16 +643,21 @@
     };
 
     const traceBest2D = {
-        x: [{{ best_solution[0] }}], y: [{{ best_solution[1] }}], z: [{{ best_value }}],
-        mode: 'markers', type: 'scatter3d', marker: { size: 8, color: 'red' }, name: 'Mejor'
+        x: [{{ best_solution[0] }}], 
+        y: [{{ best_solution[1] }}], 
+        z: [{{ best_value }}],
+        mode: 'markers', 
+        type: 'scatter3d', 
+        marker: { size: 8, color: 'red' }, 
+        name: 'Mejor'
     };
 
-    Plotly.newPlot('mainPlot', [traceSurface, traceHist2D, traceBest2D], { ...commonLayout, title: 'Superficie 2D' }, config); 
-{% endif %}
+    Plotly.newPlot('mainPlot', [traceSurface, traceHist2D, traceBest2D], { ...commonLayout }, config);
+    {% endif %}
     // --- GRÁFICO DE CONVERGENCIA (Global vs Generacional) ---
-// --- GRÁFICO DE CONVERGENCIA (Global vs Generacional) ---
-// --- GRÁFICO DE CONVERGENCIA OPTIMIZADO ---
-    
+    // --- GRÁFICO DE CONVERGENCIA (Global vs Generacional) ---
+    // --- GRÁFICO DE CONVERGENCIA OPTIMIZADO ---
+
     // 1. El Global actúa como la BASE (Rellena hacia el suelo)
     const traceGlobal = {
         x: generations,
@@ -471,7 +665,7 @@
         type: 'scatter',
         mode: 'lines',
         name: 'Mejor Global',
-        fill: 'tozeroy', 
+        fill: 'tozeroy',
         fillcolor: 'rgba(173, 216, 230, 0.5)', // Azul Pastel
         line: { color: '#87ceeb', width: 3 }
     };
@@ -484,15 +678,14 @@
         mode: 'lines',
         name: 'Mejor de Generación',
         // --- ESTA ES LA CLAVE ---
-        fill: 'tonexty', 
+        fill: 'tonexty',
         fillcolor: 'rgba(255, 182, 193, 0.6)', // Rojo Pastel (un poco más opaco para que se note)
         line: { color: '#ff9999', width: 1.5, dash: 'dot' }
     };
 
-    const convLayout = { 
-        ...commonLayout, 
-        title: 'Análisis de Convergencia (Base Global + Delta Generacional)',
-        yaxis: { 
+    const convLayout = {
+        ...commonLayout,
+        yaxis: {
             title: "Fitness",
             rangemode: 'tozero'
         },
@@ -501,90 +694,175 @@
         legend: { orientation: 'h', x: 0.5, xanchor: 'center', y: -0.2 }
     };
 
-        // ¡IMPORTANTE! El orden debe ser [Global, Gen] para que 'tonexty' sepa contra quién compararse
-        Plotly.newPlot('convergencePlot', [traceGlobal, traceGen], convLayout, config);
+    // ¡IMPORTANTE! El orden debe ser [Global, Gen] para que 'tonexty' sepa contra quién compararse
+    Plotly.newPlot('convergencePlot', [traceGlobal, traceGen], convLayout, config);
 
 
-{% if algorithm == 'MFO' %}
+    {% if algorithm == 'MFO' %}
     (function renderSpiral() {
-        const b = {{ params.get('Constante Espiral', 1.0) }};
-        const xSpiral = [], ySpiral = [];
-        
-        // Generamos la espiral de afuera hacia adentro (t de 1 a -1)
-        for (let i = 0; i <= 200; i++) {
-            const t = 1 - (i / 200) * 2; 
-            const r = Math.exp(b * t); // Radio logarítmico
-            const theta = 2 * Math.PI * 2 * t; // 2 vueltas completas
-            
-            xSpiral.push(r * Math.cos(theta));
-            ySpiral.push(r * Math.sin(theta));
-        }
+        const b = {{ params.get('Constante Espiral', 1.0)
+    }};
+    const xSpiral = [], ySpiral = [];
 
-        // El trazo de la espiral con su área de influencia
-        const traceSpiral = { 
-            x: xSpiral, 
-            y: ySpiral, 
-            mode: 'lines', 
-            fill: 'toself', 
-            fillcolor: 'rgba(255, 193, 7, 0.2)', // Ámbar traslúcido
-            line: { color: '#ffc107', width: 3, shape: 'spline' },
-            name: 'Trayectoria Polilla'
-        };
+    // Generamos la espiral de afuera hacia adentro (t de 1 a -1)
+    for (let i = 0; i <= 200; i++) {
+        const t = 1 - (i / 200) * 2;
+        const r = Math.exp(b * t); // Radio logarítmico
+        const theta = 2 * Math.PI * 2 * t; // 2 vueltas completas
 
-        // La Flama como punto de referencia central
-        const traceFlame = {
-            x: [0],
-            y: [0],
-            mode: 'markers',
-            marker: {
-                symbol: 'star',
-                size: 22,
-                color: '#dc3545',
-                line: { color: '#000', width: 1.5 }
-            },
-            name: 'Flama (Óptimo)'
-        };
+        xSpiral.push(r * Math.cos(theta));
+        ySpiral.push(r * Math.sin(theta));
+    }
 
-        const spiralLayout = { 
-            ...commonLayout, 
-            title: 'Mecánica de Movimiento Espiral',
-            // Cambia esto en tu spiralLayout:
-            xaxis: { 
-                visible: false, 
-                autorange: true // Plotly decide el tamaño
-            }, 
-            yaxis: { 
-                visible: false, 
-                autorange: true,
-                scaleanchor: "x" 
-            },
-            showlegend: false,
-            plot_bgcolor: 'rgba(0,0,0,0)', // Fondo transparente para elegancia
-            paper_bgcolor: 'rgba(0,0,0,0)'
-        };
+    // El trazo de la espiral con su área de influencia
+    const traceSpiral = {
+        x: xSpiral,
+        y: ySpiral,
+        mode: 'lines',
+        fill: 'toself',
+        fillcolor: 'rgba(255, 193, 7, 0.2)', // Ámbar traslúcido
+        line: { color: '#ffc107', width: 3, shape: 'spline' },
+        name: 'Trayectoria Polilla'
+    };
 
-        Plotly.newPlot('spiralPlot', [traceSpiral, traceFlame], spiralLayout, config);
-    })();
+    // La Flama como punto de referencia central
+    const traceFlame = {
+        x: [0],
+        y: [0],
+        mode: 'markers',
+        marker: {
+            symbol: 'star',
+            size: 22,
+            color: '#dc3545',
+            line: { color: '#000', width: 1.5 }
+        },
+        name: 'Flama (Óptimo)'
+    };
+
+    const spiralLayout = {
+        ...commonLayout,
+        title: 'Mecánica de Movimiento Espiral',
+        // Cambia esto en tu spiralLayout:
+        xaxis: {
+            visible: false,
+            autorange: true // Plotly decide el tamaño
+        },
+        yaxis: {
+            visible: false,
+            autorange: true,
+            scaleanchor: "x"
+        },
+        showlegend: false,
+        plot_bgcolor: 'rgba(0,0,0,0)', // Fondo transparente para elegancia
+        paper_bgcolor: 'rgba(0,0,0,0)'
+    };
+
+    Plotly.newPlot('spiralPlot', [traceSpiral, traceFlame], spiralLayout, config);
+    }) ();
     {% endif %}
 
     // Redimensionar al cargar
     window.dispatchEvent(new Event('resize'));
+    // Function to handle client-side table sorting
+    function sortTable(tbodyId, colIndex, type, headerElement) {
+        const tbody = document.getElementById(tbodyId);
+        if (!tbody) return;
+
+        // CRITICAL FIX: Use .children instead of querySelectorAll('tr'). 
+        // This ensures we ONLY sort the main machine rows, completely ignoring the nested task tables!
+        const rows = Array.from(tbody.children);
+
+        // Determine sort direction
+        const isAsc = headerElement.getAttribute('data-dir') === 'asc';
+        const direction = isAsc ? -1 : 1;
+        headerElement.setAttribute('data-dir', isAsc ? 'desc' : 'asc');
+
+        // Visual update: Reset all icons, then highlight the active one
+        const icon = headerElement.querySelector('i');
+        if (icon) {
+            headerElement.parentElement.querySelectorAll('i').forEach(i => {
+                i.className = 'bi bi-arrow-down-up ms-1 text-muted'; // Reset
+            });
+            icon.className = isAsc ? 'bi bi-arrow-down ms-1 text-primary' : 'bi bi-arrow-up ms-1 text-primary';
+        }
+
+        // Sort the rows
+        rows.sort((a, b) => {
+            const cellA = a.children[colIndex];
+            const cellB = b.children[colIndex];
+
+            if (!cellA || !cellB) return 0;
+
+            // Use the 'data-sort' attribute you set in your Jinja template!
+            const valA = cellA.hasAttribute('data-sort') ? cellA.getAttribute('data-sort') : cellA.innerText.trim();
+            const valB = cellB.hasAttribute('data-sort') ? cellB.getAttribute('data-sort') : cellB.innerText.trim();
+
+            if (type === 'num') {
+                return (parseFloat(valA) - parseFloat(valB)) * direction;
+            }
+            return valA.localeCompare(valB) * direction;
+        });
+
+        // Re-append the rows to the table in their new order
+        rows.forEach(row => tbody.appendChild(row));
+    }
+
+
+    function toggleTableExpand(cardId, iconId) {
+        const card = document.getElementById(cardId);
+        const icon = document.getElementById(iconId);
+
+        if (!card || !icon) return;
+
+        // Check if it's currently at its restricted height
+        if (card.style.maxHeight === '500px') {
+            // Expand: Set to a high enough pixel value to cover the whole table
+            // This allows the CSS transition to actually animate!
+            card.style.maxHeight = '3000px';
+
+            // Change the icon to contract
+            icon.classList.remove('bi-arrows-angle-expand');
+            icon.classList.add('bi-arrows-angle-contract');
+        } else {
+            // Contract: Bring it back down to 500px
+            card.style.maxHeight = '500px';
+
+            // Change the icon back to expand
+            icon.classList.remove('bi-arrows-angle-contract');
+            icon.classList.add('bi-arrows-angle-expand');
+        }
+    }
+    
 </script>
 
 <style>
-    .plot-container { 
-        width: 100%; 
-        height: 500px; 
+    .plot-container {
+        width: 100%;
+        height: 500px;
         background-color: #fff;
     }
-    .table th { font-weight: 600; font-size: 0.85rem; }
-    .card-header { font-weight: bold; letter-spacing: 0.5px; }
-    @media (max-width: 768px) { .plot-container { height: 350px; } }
+
+    .table th {
+        font-weight: 600;
+        font-size: 0.85rem;
+    }
+
+    .card-header {
+        font-weight: bold;
+        letter-spacing: 0.5px;
+    }
+
+    @media (max-width: 768px) {
+        .plot-container {
+            height: 350px;
+        }
+    }
 
     /* Estilizamos el scroll de la tabla para que sea discreto */
     .card-body::-webkit-scrollbar {
         width: 6px;
     }
+
     .card-body::-webkit-scrollbar-thumb {
         background-color: #ccc;
         border-radius: 10px;
