@@ -576,10 +576,10 @@
     // Se eliminaron los espacios extras en las llaves de Jinja
     const traceFunc = {
         x: {{ plot_data.x | safe }},
-    y: { { plot_data.y | safe } },
-    type: 'scatter',
+        y: {{ plot_data.y | safe }},
+        type: 'scatter',
         mode: 'lines',
-            name: 'Función' 
+        name: 'Función' 
     };
     const traceHist = {
         x: historySolutions.map(s => Array.isArray(s) ? s[0] : s),
@@ -601,12 +601,12 @@
     {% elif dim == 2 %}
     const traceSurface = {
         x: {{ plot_data.x | safe }},
-    y: { { plot_data.y | safe } },
-    z: { { plot_data.z | safe } },
-    type: 'surface',
+        y: {{ plot_data.y | safe }}, // Estaba como { { ... } }
+        z: {{ plot_data.z | safe }}, // Estaba como { { ... } }
+        type: 'surface',
         colorscale: 'Viridis',
-            showscale: false,
-                opacity: 0.8
+        showscale: false,
+        opacity: 0.8
     };
 
     const traceHist2D = {
