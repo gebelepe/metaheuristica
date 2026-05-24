@@ -7,7 +7,7 @@ views = Blueprint('views', __name__)
 
 @views.route('/')
 def main():
-    return render_template("main.html")
+    return render_template("main.html.j2")
 
 # -------------------------------
 # Algoritmos metaheurísticos
@@ -565,7 +565,7 @@ def run_algorithm():
         peso_final = None
 
     return render_template(
-        'result.html',
+        'result.html.j2',
         algorithm=algo,
         best_solution=list(best_sol),
         best_value=float(best_val),
@@ -581,4 +581,4 @@ def run_algorithm():
         num_machines=num_machines,
     )
     #except Exception as e:
-    return render_template("main.html", error=f"Error Crítico: {str(e)}")
+    return render_template("main.html.j2", error=f"Error Crítico: {str(e)}")
