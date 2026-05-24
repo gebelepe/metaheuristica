@@ -1,66 +1,48 @@
 {% extends "base.html.j2" %}
 {% block title %}Resultados - Metaheurística{% endblock %}
 {% block content %}
-
-{% set algo_names = {
-'GA': 'Algoritmo Genético',
-'PSO': 'Enjambre de Partículas',
-'AIS': 'Sistema Inmune Artificial',
-'DE': 'Evolución Diferencial',
-'ACO': 'Colonia de Hormigas',
-'MFO': 'Polilla-Flama'
-} %}
 {% set full_algo_name = algo_names[algorithm] if algorithm in algo_names else algorithm %}
+{% set current_algo_color = algo_colors[algorithm] if algorithm in algo_colors else 'bg-dark text-light' %}
+{% set full_problem_name = problem_names[problem] if problem in problem_names else problem %}
+{% set current_problem_color = problem_colors[problem] if problem in problem_colors else 'bg-dark text-light' %}
+{% set current_problem_text = problem_text[problem] if problem in problem_text %}
+{% set current_problem_icon = problem_icons[problem] if problem in problem_icons else '' %}
+{% set color_cycle_problem = [current_problem_color+' bg-opacity-25', 'bg-dark text-light'] %}<br>
+<div class="main-responsive-container px-4 px-md-5 mt-3 mt-md-5 pt-3 pt-md-5">
 
-{% set algo_colors = {
-'GA': 'bg-success text-light',
-'PSO': 'bg-primary text-light',
-'AIS': 'bg-warning text-dark',
-'DE': 'bg-info text-light',
-'ACO': 'bg-danger text-light',
-'MFO': 'bg-dark text-white'
-} %}
-{% set current_badge_color = algo_colors[algorithm] if algorithm in algo_colors else 'bg-dark' %}
-
-{% set color_cycle = [current_badge_color, current_badge_color + ' bg-opacity-50 text-dark'] %}<br>
-<div class="container mt-3 mt-md-5 pt-3 pt-md-5">
-
-    <div class="row mb-4">
-        <div class="col-lg-7 mb-3 mb-lg-0">
-            <div class="card shadow-sm h-100">
-                <div class="card-body">
-                    <h5 class="card-title text-muted mb-3 fs-6">Resumen de Ejecución</h5>
-                    <div class="table-responsive align-self-start">
+<div class="row mb-4">
+    <div class="col-12 col-lg-4 d-flex flex-column gap-3 mb-4 mb-lg-0">
+        
+        <div class="col-12 position-relative d-flex flex-column"> <div class="card shadow-sm"> <div class="card-body"> <div class="position-relative d-flex align-items-center mb-3">
+                        <i class="bi bi-clipboard-data text-muted position-absolute start-0 fs-5"></i>
+                        <h5 class="card-title text-muted m-0 fs-6 w-100 text-center">Resumen de Ejecución</h5>
+                    </div>
+                    <div class="table-responsive">
                         <table class="table table-hover align-middle mb-0">
                             <tbody>
                                 <tr>
                                     <th class="table-light w-50 fs-6 fw-normal text-secondary">Algoritmo</th>
-                                    <td><span class="badge {{ current_badge_color }} fs-6">{{ full_algo_name }}</span>
-                                    </td>
+                                    <td><span class="badge {{ current_algo_color }} fs-6">{{ full_algo_name }}</span></td>
                                 </tr>
                                 <tr>
                                     <th class="table-light align-middle fw-normal fs-6 text-secondary">Problema</th>
                                     <td>
-                                        {% if plot_data and plot_data.type == 'tsp' %}
-                                        <span class="fw-bold text-info">Problema del Viajante (TSP)</span>
-                                        {% elif plot_data and plot_data.type == 'knapsack' %}
-                                        <span class="fw-bold text-primary">Problema de la Mochila</span>
-                                        {% elif scheduling_data %}
-                                        <span class="fw-bold text-warning">Job Scheduling</span>
+                                        {% if problem == 'Func' %}
+                                        <span class="fw-bold">\( {{ latex_function }} \)</span>
                                         {% else %}
-                                        <span class="fw-bold">\( {{ function }} \)</span>
+                                        <span class="{{current_problem_text}} fw-bold ">{{ full_problem_name }}</span>
                                         {% endif %}
                                     </td>
                                 </tr>
                                 <tr>
                                     <th class="table-light fw-normal fs-6 text-secondary">
-                                        {% if plot_data and plot_data.type == 'tsp' %} Ciudades
-                                        {% elif plot_data and plot_data.type == 'knapsack' %} Capacidad de la Mochila
+                                        {% if problem == 'TSP' %} Ciudades
+                                        {% elif problem == 'KnS' %} Capacidad de la Mochila
                                         {% elif scheduling_data %} Máquinas
                                         {% else %} Dimensión {% endif %}
                                     </th>
                                     <td class="fw-bold">
-                                        {% if plot_data and plot_data.type == 'knapsack' and best_weight %}
+                                        {% if problem == 'KnS' and best_weight %}
                                         {{ best_weight|round(2) }} kg
                                         {% elif scheduling_data %}
                                         {{ num_machines }}
@@ -74,22 +56,21 @@
                                     <th class="table-light fw-normal fs-6 text-secondary">Tareas</th>
                                     <td class="fw-bold">{{ scheduling_data|length }}</td>
                                 </tr>
-                                {% elif plot_data and plot_data.type == 'knapsack' %}
+                                {% elif problem == 'KnS' %}
                                 <tr>
                                     <th class="table-light fw-normal fs-6 text-secondary">Peso final de la mochila</th>
                                     <td class="fw-bold">{{ best_weight|round(2) }} kg</td>
                                 </tr>
                                 {% endif %}
                                 <tr>
-                                    <th class="table-light fw-normal fs-6 text-secondary">
-                                        {% if plot_data and plot_data.type == 'tsp' %} Mejor Distancia
-                                        {% elif plot_data and plot_data.type == 'knapsack' %} Valor Total Obtenido
+                                    <th class="table-light fw-normal fs-6 text-secondary border-0">
+                                        {% if problem == 'TSP' %} Mejor Distancia
+                                        {% elif problem == 'KnS' %} Valor Total Obtenido
                                         {% else %} Mejor Fitness {% endif %}
                                     </th>
                                     <td class="fw-bold text-success">
-                                        {{ " $" if plot_data and plot_data.type == 'knapsack' else "" }}{{ "%g" |
-                                        format(best_value | round(4) | float) }}{{ " Metros" if plot_data and
-                                        plot_data.type == 'tsp' else "" }}{{ "s" if scheduling_data else "" }}
+                                        {{ " $" if problem == 'KnS' else "" }}{{ "%g" |
+                                        format(best_value | round(4) | float) }}{{ " Metros" if problem == 'TSP' else "" }}{{ "s" if scheduling_data else "" }}
                                     </td>
                                 </tr>
                             </tbody>
@@ -99,10 +80,10 @@
             </div>
         </div>
 
-        <div class="col-lg-5">
-            <div class="card shadow-sm h-100">
-                <div class="card-body">
-                    <h5 class="card-title text-muted mb-3 fs-6">Parámetros de <span>{{ full_algo_name }}</span></h5>
+        <div class="col-12 position-relative d-flex flex-column"> <div class="card shadow-sm"> <div class="card-body"> <div class="position-relative d-flex align-items-center mb-3">
+                        <i class="bi bi-sliders text-muted position-absolute start-0 fs-5"></i>
+                        <h5 class="card-title text-muted m-0 fs-6 w-100 text-center">Parametros de {{full_algo_name}}</h5>
+                    </div>
                     <div class="table-responsive">
                         <table class="table table-hover align-middle mb-0">
                             <tbody>
@@ -133,390 +114,393 @@
         </div>
     </div>
 
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card shadow-sm">
-                <div class="card-header bg-secondary text-light d-flex justify-content-between align-items-center">
-                    <i class="bi bi-clock-history fs-4 me-2"></i>
-                    <div class="text-center m-0" style="flex: 2;">
-                
-                        <span class="fw-bold" style="font-weight: bold;">Línea de Tiempo</span>
+      <div class="col-12 col-lg-8 d-flex flex-column">
+    <div class="row flex-grow-1 h-100">
+        
+        {% if algorithm == 'MFO' %}
 
-                    </div></div>
-                <div class="table-responsive">
-                    <table class="table text-center align-middle mb-0">
-                        {% set total_iter = history|length %}
-                        {% set idx0 = 0 %}
-                        {% set idx1 = (total_iter // 3) if total_iter > 3 else 0 %}
-                        {% set idx2 = (2 * total_iter // 3) if total_iter > 3 else 0 %}
-                        {% set idx_final = total_iter - 1 %}
-                        {% set p0 = history[idx0] %}
-                        {% set p1 = history[idx1] %}
-                        {% set p2 = history[idx2] %}
-                        {% set p_final = history[idx_final] %}
-                        <thead class="table-light">
-                            <tr class="small text-uppercase text-muted">
-                                <th>Generación {{ p0.generation }}</th>
-                                <th>Generación {{ p1.generation }}</th>
-                                <th>Generación {{ p2.generation }}</th>
-                                <th>Generación {{ p_final.generation }}</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr class="fs-5">
-                                {% for p in [p0, p1, p2, p_final] %}
-                                <td class="py-3">
-                                    <div class="fw-bold text-dark">{{ " $" if plot_data and plot_data.type ==
-                                        'knapsack'
-                                        else "" }}{{ "%g" | format(p.fitness | round(4) | float) }}{{ "s" if
-                                        scheduling_data else "" }}{{ "m" if plot_data and plot_data.type == 'tsp'
-                                        else
-                                        "" }}</div>
-                                    {% if plot_data.type == 'knapsack' %}
-                                    <div class="text-muted small" style="font-size: 0.65rem;">Lleva: {{ (p.solution
-                                        |
-                                        sum | round(4) | int) }} ítems</div>
-                                    {% elif not scheduling_data and plot_data.type != 'tsp' %}
-                                    <div class="text-muted" style="font-size: 0.7rem;">
-                                        ({% for val in p.solution -%}{{ (val | round(4)) | float }}{{ ", " if not
-                                        loop.last }}{%- endfor %})
-                                    </div>
-                                    {% endif %}
-                                </td>
-                                {% endfor %}
-                            </tr>
-                        </tbody>
-                    </table>
+        <div class="col-lg-4 mt-4 mt-lg-0 d-flex flex-column">
+            <div class="card shadow-sm h-100 d-flex flex-column">
+                <div class="card-body d-flex flex-column overflow-hidden">
+                    <div class="position-relative d-flex align-items-center mb-3">
+                        <i class="bi bi-bug text-muted position-absolute start-0 fs-5"></i>
+                        <h5 class="card-title text-muted m-0 fs-6 w-100 text-center">MFO</h5>
+                        <i class="bi bi-fire text-muted fs-5"></i>
+                    </div>
+                
+                        <div class="max-height-fixer"><div id="spiralPlot" style="height: 100%; width: 100%;"></div></div>
                 </div>
-                <div class="card-footer bg-white border-top-0 py-4 px-4">
+                
+                <div class="card-footer small text-muted border-top">
+                    La espiral representa cómo la polilla se acerca a la flama usando:
+                    \( D \cdot e^{bt} \cdot \cos(2\pi t) + Flame \)
+                </div>
+            </div>
+        </div>
+
+        {% endif %}
+        
+        <div class="{{ 'col-lg-8' if algorithm == 'MFO' else 'col-12' }} d-flex flex-column ">
+            <div class="card shadow-sm h-100 d-flex flex-column">
+                <div class="card-body d-flex flex-column overflow-hidden">
+                    <div class="position-relative  d-flex align-items-center mb-3 min-height: 0;" >
+                        <i class="bi bi-graph-down text-muted position-absolute start-0 fs-5"></i>
+                        <h5 class="card-title text-muted m-0 fs-6 w-100 text-center ">Convergencia</h5>
+                    </div>
+                    
+                        <div class="max-height-fixer"><div id="convergencePlot" style="height:100%;"></div></div>
+                        
+
+                </div>
+                
+                <div class="card-footer bg-white border-top py-4 px-4">
+                    {% set total_iter = history|length %}
                     {% set ns = namespace(eff = 0, last = -1) %}
                     {% for h in history %}
-                    {% if h.fitness != ns.last %}{% set ns.eff = h.generation %}{% endif %}
-                    {% set ns.last = h.fitness %}
+                        {% if h.fitness != ns.last %}{% set ns.eff = h.generation %}{% endif %}
+                        {% set ns.last = h.fitness %}
                     {% endfor %}
                     {% set progress_percent = (ns.eff / (total_iter - 1)) * 100 if total_iter > 1 else 100 %}
-                    <div class="progress shadow-sm mb-2"
-                        style="height: 10px; background-color: #e9ecef; overflow: visible; position: relative;">
-                        <div class="progress-bar progress-bar-striped progress-bar-animated {{ current_badge_color.split(' ')[0] }}"
-                            role="progressbar" style="width: {{ progress_percent }}%; border-radius: 5px;"></div>
-                        <div
-                            style="position: absolute; left: {{ progress_percent }}%; top: -10px; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center;">
-                            <div class="badge {{ current_badge_color }} shadow-sm"
-                                style="font-size: 0.7rem; transform: translateY(-10px); white-space: nowrap;">{{
-                                progress_percent|round|int }}%</div>
+                    
+                    <div class="progress shadow-sm mb-2" style="height: 10px; background-color: #e9ecef; overflow: visible; position: relative;">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated {{ current_algo_color.split(' ')[0] }}"
+                             role="progressbar" style="width: {{ progress_percent }}%; border-radius: 5px;"></div>
+                        
+                        <div style="position: absolute; left: {{ progress_percent }}%; top: -10px; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center;">
+                            <div class="badge {{ current_algo_color }} shadow-sm" style="font-size: 0.7rem; transform: translateY(-10px); white-space: nowrap;">
+                                {{ progress_percent|round|int }}%
+                            </div>
                         </div>
                     </div>
+                    
                     <div class="d-flex justify-content-between small text-muted mt-1">
                         <span>Generación 0</span>
                         <span>Generación {{ total_iter - 1 }}</span>
                     </div>
+                    
                     <div class="mt-4 text-center">
                         <p class="small text-muted mb-0">
-                            El algoritmo encontró la mejor solución en la generacion <strong>{{ ns.eff }}</strong>
-                            del
-                            proceso.
-                            {% if progress_percent < 30 %} <br><span class="text-warning small"><i
-                                        class="bi bi-exclamation-triangle"></i> Convergencia temprana.</span>{%
-                                endif %}
+                            El algoritmo encontró la mejor solución en la generación <strong>{{ ns.eff }}</strong>.
+                            {% if progress_percent < 30 %} 
+                                <br>
+                                <span class="text-warning small">
+                                    <i class="bi bi-exclamation-triangle"></i> Convergencia temprana.
+                                </span>
+                            {% endif %}
                         </p>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+</div></div>
+
 
     <div class="row mb-5">
-        <div class="{{ 'col-lg-8' if plot_data and plot_data.type == 'tsp' else 'col-12' }}">
-            {% if plot_data and plot_data.type == 'knapsack' %}
-            <div class="card shadow-sm h-100" id="knapsackCard"
-                style="max-height: 500px; transition: max-height 0.3s ease-in-out;">
-                <div
-                    class="card-header {{ current_badge_color }} text-white d-flex justify-content-between align-items-center">
-                    <div class="text-center m-0" style="flex: 2;">
-                        <span class="bi bi-bag-check-fill me-2 fw-bold">Contenido de la Mochila</span>
-                    </div>
-                    <button type="button" class="btn btn-sm text-white border-0 shadow-none"
-                        onclick="toggleTableExpand('knapsackCard', 'expandIconKnapsack')"
-                        style="background-color: rgba(255, 255, 255, 0.2);">
-                        <i class="bi bi-arrows-angle-expand" id="expandIconKnapsack"></i>
-                    </button>
-                </div>
+        
+        <div class="{{ 'col-lg-8' if problem == 'TSP' else 'col-12' }}" style="{{ 'height: 60vh' if problem == 'TSP' else ''}}">
+            <div class="card shadow-sm" id="mainCard" style="height: 100%; width: 100%; overflow: hidden; display: flex; flex-direction: column; transition: max-height 0.3s ease-in-out;">
+                <div class="card-header {{ current_problem_color  }} d-flex justify-content-between align-items-center">
+                    <i class="bi {{ current_problem_icon }} fs-4 me-2"></i>
 
-                <div class="card-body p-0" style="overflow-y: auto;">
-                    <table class="table table-sm table-hover align-middle mb-0">
-                        <thead class="table-light sticky-top">
-                            <tr class="small text-muted" style="user-select: none;">
-                                <th class="text-center" style="width: 60px; cursor: pointer;"
-                                    onclick="sortTable('knapsack-body', 0, 'num', this)">
-                                    Estado <i class="bi bi-arrow-down-up ms-1"></i>
-                                </th>
-                                <th style="cursor: pointer;" onclick="sortTable('knapsack-body', 1, 'str', this)">
-                                    Ítem <i class="bi bi-arrow-down-up ms-1"></i>
-                                </th>
-                                <th class="text-end" style="cursor: pointer;"
-                                    onclick="sortTable('knapsack-body', 2, 'num', this)">
-                                    Peso <i class="bi bi-arrow-down-up ms-1"></i>
-                                </th>
-                                <th class="text-end" style="cursor: pointer;"
-                                    onclick="sortTable('knapsack-body', 3, 'num', this)">
-                                    Valor <i class="bi bi-arrow-down-up ms-1"></i>
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody id="knapsack-body"> {% for item in items_data[0] %}
-                            <tr>
-                                <td class="text-center" data-sort="{{ '1' if item.seleccion else '0' }}">
-                                    {% if item.seleccion %}
-                                    <span class="badge rounded-pill bg-success"><i class="bi bi-check-lg"></i></span>
-                                    {% else %}
-                                    <span class="badge rounded-pill bg-danger text-white"><i class="bi bi-x"></i></span>
-                                    {% endif %}
-                                </td>
-                                <td><span class="fw-bold small">{{ item.nombre }}</span></td>
-                                <td class="text-end font-monospace">{{ item.peso }}</td>
-                                <td class="text-end font-monospace text-primary" data-sort="{{ item.valor }}">
-                                    ${{ item.valor }}
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            {% elif scheduling_data %}
-
-            <div class="card shadow-sm" id="schedulingCard"
-                style="max-height: 520px; height: fit-content; width: 100%; overflow: hidden; display: flex; flex-direction: column; transition: max-height 0.4s ease-in-out;">
-
-                <div class="card-header {{ current_badge_color }} d-flex justify-content-between align-items-center">
-                        <i class="bi bi-clipboard-data fs-4 me-2"></i>
-                    <div class="text-center m-0" style="flex: 2;">
-                
-                        <span class="fw-bold" style="font-weight: bold;">Asignación de Tareas</span>
-
-                    </div>
-
-
-
-                    <button type="button" class="btn btn-sm border-0 shadow-none"
-                        onclick="toggleTableExpand('schedulingCard', 'expandIcon')"
-                        style="background-color: rgba(255, 255, 255, 0.2);">
-
-                        <i class="bi bi-arrows-angle-expand" id="expandIcon"></i>
-
-                    </button>
-
-                </div>
-
-                <div class="bg-light p-3 border-bottom border-secondary-subtle" style="z-index: 2;">
-
-                    {% set ns_eff = namespace(total_time=0) %}
-                    {% for m in scheduling_data %}
-                    {% set ns_eff.total_time = ns_eff.total_time + m[0] %}
-                    {% endfor %}
-                    {% set num_machines = scheduling_data|length %}
-                    {% set efficiency = 0 %}
-                    {% if best_value > 0 and num_machines > 0 %}
-                    {% set efficiency = (ns_eff.total_time / (best_value * num_machines) * 100) | round(1) %}
-                    {% endif %}
-                    {% if efficiency <= 50 %} {% set hue=0 %} {% set lightness=efficiency * 0.9 %} {% else %} {% set
-                        hue=(efficiency - 50) * 2.4 %} {% set lightness=45 %} {% endif %} {% set dynamic_color="hsl(" ~
-                        hue ~ ", 80%, " ~ lightness ~ "%)" %} <div
-                        class="d-flex justify-content-between align-items-end mb-1">
-
-                        <span class="small fw-bold text-muted"><i
-                                class="bi bi-lightning-charge-fill me-1"></i>Eficiencia de Balanceo</span>
-
-                        <span class="badge shadow-sm" style="background-color: {{ dynamic_color }}; color: white;">{{
-                            efficiency
-
-                            }}%</span>
-
-                </div>
-
-                <div class="progress shadow-sm" style="height: 12px; background-color: #dee2e6;">
-
-                    <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar"
-                        style="width: {{ efficiency }}%; background-color: {{ dynamic_color }}; border-radius: 5px;">
-
-                    </div>
-
-                </div>
-
-            </div>
-
-
-
-            <div class="card-body p-0" style="overflow-y: auto; height: auto;">
-
-                <div class="table-responsive flex-grow-1" style="overflow: visible;">
-                    <table class="table table-hover align-middle mb-0">
-
-                    <thead style="position: sticky; top: 0; z-index: 1020; background-color: white;">
-                        <tr class="small text-muted" style="user-select: none;">
-                            <th style="width: 7%; cursor: pointer;"
-                                onclick="sortTable('scheduling-body', 0, 'num', this)">
-                                ID <i class="bi bi-arrow-down-up ms-1 text-muted"></i>
-                            </th>
-
-                            <th style="width: 69%; cursor: pointer;"
-                                onclick="sortTable('scheduling-body', 1, 'num', this)">
-                                Línea de tiempo <i class="bi bi-arrow-down-up ms-1 text-muted"></i>
-                            </th>
-
-                            <th style="width: 8%; cursor: pointer;"
-                                onclick="sortTable('scheduling-body', 2, 'num', this)">
-                                Tiempo <i class="bi bi-arrow-down-up ms-1 text-muted"></i>
-                            </th>
-
-                            <th style="width: 8%; cursor: pointer;"
-                                onclick="sortTable('scheduling-body', 3, 'num', this)">
-                                Ocio <i class="bi bi-arrow-down-up ms-1 text-muted"></i>
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody id="scheduling-body">
-                        {% set ns = namespace(machine_num=0, cycler=0) %}
-                        {% for machine in scheduling_data %}
-                        <tr>
-                            {% set ns.machine_num = ns.machine_num + 1 %}
-
-                            <td class="align-middle text-center" data-sort="{{ ns.machine_num }}">
-                                <span class="text-secondary small">#</span>{{ ns.machine_num }}
-                            </td>
-
-                            <td class="fw-bold align-middle" data-sort="{{ machine[0] }}">
-                                <div class="progress shadow-sm"
-                                    style="height: 10px; background-color: #e9ecef; overflow: visible; position: relative; margin-top: 35px; margin-bottom: 0px;">
-                                    {% set ns.cycler = 0 %}
-                                    {% for task in machine[1:] %}
-                                    {% set task_percent = task[1]/best_value * 100 %}
-                                    <div class="progress-bar progress-bar-animated progress-bar-striped {{ color_cycle[ns.cycler % (color_cycle|length)] }}"
-                                        role="progressbar"
-                                        style="width: {{ task_percent }}%; position: relative; overflow: visible; border-radius: {% if task_percent == 100 %}5px{% elif loop.first %}5px 0 0 5px{% elif loop.last %}0 5px 5px 0{% else %}0{% endif %};">
-                                        {% set ns.cycler = ns.cycler + 1 %}
-                                        <div
-                                            style="position: absolute; top: -28px; left: 50%; transform: translateX(-50%); z-index: 10;">
-                                            <div class="badge {{ color_cycle[ns.cycler % (color_cycle|length)] }} border shadow-sm"
-                                                style="font-size: 0.7rem; white-space: nowrap;">
-                                                {{ task[0] }}
-                                            </div>
-                                        </div>
-
-                                        <div
-                                            style="position: absolute; bottom: -28px; left: 50%; transform: translateX(-50%); z-index: 10;">
-                                            <div class="badge bg-light text-dark border shadow-sm"
-                                                style="font-size: 0.7rem; white-space: nowrap;">
-                                                {{ task[1] }}s
-                                            </div>
-                                        </div>
-                                    </div>
-                                    {% set ns.cycler = ns.cycler + 2 %}
+                    {% if problem == 'KnS' %}
+                            <div class="text-center m-0" style="flex: 2;">
+                                <span class="me-2 fw-bold">Contenido de la Mochila</span>
+                            </div>
+                            <button type="button" class="btn btn-sm text-white border-0 shadow-none"
+                                onclick="toggleTableExpand('mainCard', 'expandIconKnapsack', '600px')"
+                                style="background-color: rgba(255, 255, 255, 0.2);">
+                                <i class="bi bi-arrows-angle-expand" id="expandIconKnapsack"></i>
+                            </button>
+                </div>  
+                        <div class="card-body p-0" style="overflow-y: auto;">
+                            <table class="table table-sm table-hover align-middle mb-0">
+                                <thead class="table-light sticky-top">
+                                    <tr class="small text-muted" style="user-select: none;">
+                                        <th class="text-center" style="cursor: pointer;"
+                                            onclick="sortTable('knapsack-body', 0, 'num', this)">
+                                            Estado <i class="bi bi-arrow-down-up ms-1"></i>
+                                        </th>
+                                        <th style="cursor: pointer;"
+                                            onclick="sortTable('knapsack-body', 1, 'str', this)">
+                                            Ítem <i class="bi bi-arrow-down-up ms-1"></i>
+                                        </th>
+                                        <th class="text-end" style="cursor: pointer;"
+                                            onclick="sortTable('knapsack-body', 2, 'num', this)">
+                                            Peso <i class="bi bi-arrow-down-up ms-1"></i>
+                                        </th>
+                                        <th class="text-end" style="cursor: pointer;"
+                                            onclick="sortTable('knapsack-body', 3, 'num', this)">
+                                            Valor <i class="bi bi-arrow-down-up ms-1"></i>
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody id="knapsack-body"> {% for item in items_data[0] %}
+                                    <tr>
+                                        <td class="text-center" data-sort="{{ '1' if item.seleccion else '0' }}">
+                                            {% if item.seleccion %}
+                                            <span class="badge rounded-pill bg-success"><i
+                                                    class="bi bi-check-lg"></i></span>
+                                            {% else %}
+                                            <span class="badge rounded-pill bg-danger text-white"><i
+                                                    class="bi bi-x"></i></span>
+                                            {% endif %}
+                                        </td>
+                                        <td><span class="fw-bold small">{{ item.nombre }}</span></td>
+                                        <td class="text-end font-monospace">{{ item.peso }}</td>
+                                        <td class="text-end font-monospace text-primary" data-sort="{{ item.valor }}">
+                                            ${{ item.valor }}
+                                        </td>
+                                    </tr>
                                     {% endfor %}
-                                </div>
+                                </tbody>
+                            </table>
+                        </div>
+                
 
-                                <div class="d-flex justify-content-between small text-muted position-relative mt-1"
-                                    style="z-index: 1; margin-bottom: 28px;">
-                                    <span>0s</span>
-                                    <span>{{ "%g" | format(best_value | round(4) | float) }}s</span>
-                                </div>
+                    {% elif problem == 'JobS' %}
 
-                                {% if not machine[1] %}
-                                <div class="text-center" style="margin-top: -15px; margin-bottom: 15px;">
-                                    <span class="text-danger small"><i class="bi bi-exclamation-triangle"></i> No hay
-                                        tareas</span>
-                                </div>
-                                {% endif %}
-                            </td>
+                            <div class="text-center m-0" style="flex: 2;">
 
-                            {% set ns_time = namespace(total=0) %}
-                            {% for task in machine[1:] %}{% set ns_time.total = ns_time.total + task[1] %}{% endfor %}
-                            {% set idle_time = best_value - ns_time.total %}
+                                <span class="fw-bold" style="font-weight: bold;">Asignación de Tareas</span>
 
-                            <td class="align-middle text-center" data-sort="{{ ns_time.total }}">
-                                <span class="fw-bold" style="font-size: 0.9rem;">{{ "%g" | format(ns_time.total |
-                                    round(2) | float) }}s</span><br>
-                                <span class="text-muted" style="font-size: 0.7rem;">{{ machine[1:]|length }}
-                                    Tareas</span>
-                            </td>
+                            </div>
 
-                            <td class="align-middle text-center" data-sort="{{ idle_time }}">
-                                {% if idle_time > 0.0001 %}
-                                <span class="text-warning fw-bold" style="font-size: 0.9rem;">{{ "%g" | format(idle_time
-                                    | round(2) | float) }}s</span>
-                                {% else %}
-                                <span class="text-success fw-bold" style="font-size: 0.9rem;">0s</span>
-                                {% endif %}
-                                <br><span class="text-muted" style="font-size: 0.7rem;">Ocio</span>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+
+
+                            <button type="button" class="btn btn-jobs border-0 shadow-none"
+                                onclick="toggleTableExpand('mainCard', 'expandIcon', '30vh')">
+
+                                <i class="bi bi-arrows-angle-expand" id="expandIcon"></i>
+
+                            </button>
+
+                        </div>
+
+                        <div class="bg-light p-3 border-bottom border-secondary-subtle" style="z-index: 2;">
+
+                            {% set ns_eff = namespace(total_time=0) %}
+                            {% for m in scheduling_data %}
+                            {% set ns_eff.total_time = ns_eff.total_time + m[0] %}
+                            {% endfor %}
+                            {% set num_machines = scheduling_data|length %}
+                            {% set efficiency = 0 %}
+                            {% if best_value > 0 and num_machines > 0 %}
+                            {% set efficiency = (ns_eff.total_time / (best_value * num_machines) * 100) | round(1) %}
+                            {% endif %}
+                            {% if efficiency <= 50 %} {% set hue=0 %} {% set lightness=efficiency * 0.9 %} {% else %} {%
+                                set hue=(efficiency - 50) * 2.4 %} {% set lightness=45 %} {% endif %} {% set
+                                dynamic_color="hsl(" ~ hue ~ ", 80%, " ~ lightness ~ "%)" %} <div
+                                class="d-flex justify-content-between align-items-end mb-1">
+
+                                <span class="small fw-bold text-muted"><i
+                                        class="bi bi-lightning-charge-fill me-1"></i>Eficiencia de Balanceo</span>
+
+                                <span class="badge shadow-sm"
+                                    style="background-color: {{ dynamic_color }}; color: white;">{{
+                                    efficiency
+
+                                    }}%</span>
+
+                        </div>
+
+                        <div class="progress shadow-sm" style="height: 12px; background-color: #dee2e6;">
+
+                            <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar"
+                                style="width: {{ efficiency }}%; background-color: {{ dynamic_color }}; border-radius: 5px;">
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+
+                    <div class="card-body p-0" style="overflow-y: auto; height: auto;">
+
+                        <div class="table-responsive flex-grow-1" style="overflow: visible;">
+                            <table class="table table-hover align-middle mb-0">
+
+                                <thead style="position: sticky; top: 0; z-index: 1020; background-color: white;">
+                                    <tr class="small text-muted" style="user-select: none;">
+                                        <th style="width: 7%; cursor: pointer;"
+                                            onclick="sortTable('scheduling-body', 0, 'num', this)">
+                                            ID <i class="bi bi-arrow-down-up ms-1 text-muted"></i>
+                                        </th>
+
+                                        <th style="width: 69%; cursor: pointer;"
+                                            onclick="sortTable('scheduling-body', 1, 'num', this)">
+                                            Línea de tiempo <i class="bi bi-arrow-down-up ms-1 text-muted"></i>
+                                        </th>
+
+                                        <th style="width: 8%; cursor: pointer;"
+                                            onclick="sortTable('scheduling-body', 2, 'num', this)">
+                                            Tiempo <i class="bi bi-arrow-down-up ms-1 text-muted"></i>
+                                        </th>
+
+                                        <th style="width: 8%; cursor: pointer;"
+                                            onclick="sortTable('scheduling-body', 3, 'num', this)">
+                                            Ocio <i class="bi bi-arrow-down-up ms-1 text-muted"></i>
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody id="scheduling-body">
+                                    {% set ns = namespace(machine_num=0, cycler=0) %}
+                                    {% for machine in scheduling_data %}
+                                    <tr>
+                                        {% set ns.machine_num = ns.machine_num + 1 %}
+
+                                        <td class="align-middle text-center" data-sort="{{ ns.machine_num }}">
+                                            <span class="text-secondary small"></span>{{ ns.machine_num }}
+                                        </td>
+
+                                        <td class="fw-bold align-middle" data-sort="{{ machine[0] }}">
+                                            <div class="progress shadow-sm"
+                                                style="height: 10px; background-color: #e9ecef; overflow: visible; position: relative; margin-top: 35px; margin-bottom: 0px;">
+                                                {% set ns.cycler = 0 %}
+                                                {% for task in machine[1:] %}
+                                                {% set task_percent = task[1]/best_value * 100 %}
+                                                <div class="progress-bar progress-bar-animated progress-bar-striped {{ color_cycle_problem[ns.cycler % (color_cycle_problem|length)] }}"
+                                                    role="progressbar"
+                                                    style="width: {{ task_percent }}%; position: relative; overflow: visible; border-radius: {% if task_percent == 100 %}5px{% elif loop.first %}5px 0 0 5px{% elif loop.last %}0 5px 5px 0{% else %}0{% endif %};">
+                                                    {% set ns.cycler = ns.cycler + 1 %}
+                                                    <div
+                                                        style="position: absolute; top: -28px; left: 50%; transform: translateX(-50%); z-index: 10;">
+                                                        <div class="badge {{ color_cycle_problem[ns.cycler % (color_cycle_problem|length)] }} border shadow-sm"
+                                                            style="font-size: 0.7rem; white-space: nowrap;">
+                                                            {{ task[0] }}
+                                                        </div>
+                                                    </div>
+
+                                                    <div
+                                                        style="position: absolute; bottom: -28px; left: 50%; transform: translateX(-50%); z-index: 10;">
+                                                        <div class="badge bg-light text-dark border shadow-sm"
+                                                            style="font-size: 0.7rem; white-space: nowrap;">
+                                                            {{ task[1] }}s
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                {% set ns.cycler = ns.cycler + 2 %}
+                                                {% endfor %}
+                                            </div>
+
+                                            <div class="d-flex justify-content-between small text-muted position-relative mt-1"
+                                                style="z-index: 1; margin-bottom: 28px;">
+                                                <span>0s</span>
+                                                <span>{{ "%g" | format(best_value | round(4) | float) }}s</span>
+                                            </div>
+
+                                            {% if not machine[1] %}
+                                            <div class="text-center" style="margin-top: -15px; margin-bottom: 15px;">
+                                                <span class="text-danger small"><i
+                                                        class="bi bi-exclamation-triangle"></i> No hay
+                                                    tareas</span>
+                                            </div>
+                                            {% endif %}
+                                        </td>
+
+                                        {% set ns_time = namespace(total=0) %}
+                                        {% for task in machine[1:] %}{% set ns_time.total = ns_time.total + task[1] %}{%
+                                        endfor %}
+                                        {% set idle_time = best_value - ns_time.total %}
+
+                                        <td class="align-middle text-center" data-sort="{{ ns_time.total }}">
+                                            <span class="fw-bold" style="font-size: 0.9rem;">{{ "%g" |
+                                                format(ns_time.total |
+                                                round(2) | float) }}s</span><br>
+                                            <span class="text-muted" style="font-size: 0.7rem;">{{ machine[1:]|length }}
+                                                Tareas</span>
+                                        </td>
+
+                                        <td class="align-middle text-center" data-sort="{{ idle_time }}">
+                                            {% if idle_time > 0.0001 %}
+                                            <span class="text-warning fw-bold" style="font-size: 0.9rem;">{{ "%g" |
+                                                format(idle_time
+                                                | round(2) | float) }}s</span>
+                                            {% else %}
+                                            <span class="text-success fw-bold" style="font-size: 0.9rem;">0s</span>
+                                            {% endif %}
+                                            <br><span class="text-muted" style="font-size: 0.7rem;">Ocio</span>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                {% elif problem == 'TSP' %}
+                <div class="text-center m-0" style="flex: 2;">
+
+                    <span class="fw-bold" style="font-weight: bold;">TSP</span>
+
                 </div>
             </div>
 
+                <div id="mainPlot" class="plot-container-tsp border rounded shadow-sm"></div>
+            </div>
+                {% else %}
+                <div class="text-center m-0" style="flex: 2;">
+                    <span class="fw-bold" style="font-weight: bold;">Función Continua</span>
+                </div>
+            </div>
+            <div>
+                <div id="mainPlot" class="plot-container border rounded shadow-sm"></div>
+            </div>
+            {% endif %}
+            
         </div>
 
-        {% else %}
-        <div>
-            <div id="mainPlot" class="plot-container border rounded shadow-sm"></div>
+        {% if problem == 'TSP' %}
+        <div class="col-lg-4 mt-4 mt-lg-0">
+            <div class="card shadow-sm" id="tspRouteCard" style="height: 100%; overflow: hidden; display: flex; flex-direction: column; transition: max-height 0.3s ease-in-out;">
+                
+                <div class="card-header {{ current_algo_color }} d-flex justify-content-between align-items-center">
+                    <i class="bi bi-signpost-2 fs-4 me-2"></i>
+                    <div class="text-center m-0" style="flex: 2;">
+                        <span class="fw-bold" style="font-weight: bold;">Ruta</span>
+                    </div>
+                </div>
+                
+                <div class="card-body p-0 d-flex flex-column" style="flex-grow: 1; min-height: 0;">
+                    
+                    <div style="flex-grow: 1; overflow-y: auto; height: 100%;">
+                    <div class="max-height-fixer">
+                        <table class="table table-hover mb-0" style="width: 100%; margin: 0;">
+                            <thead style="position: sticky; top: 0; z-index: 1020; background: white;">
+                                <tr class="small text-muted text-uppercase">
+                                    <th style="width: 20%;" class="text-center border-0">ID</th>
+                                    <th style="width: 29%;" class="text-end border-0"></th>
+                                    <th style="width: 2%; position: relative; border: none;" class="px-0">
+                                        <span style="position: absolute; left: 50%; top: 50%; transform: translate(-50%,-5px); white-space: nowrap; z-index: 20;">
+                                            Coordenadas
+                                        </span>
+                                    </th>
+                                    <th style="width: 29%;" class="text-start border-0"></th>
+                                    <th style="width: 20%;" class="text-center border-0">Ver</th>
+                                </tr>
+                            </thead>
+                            <tbody id="itinerary-body"></tbody>
+                        </table>
+                      </div>  
+                    </div>
+                </div>
+            </div>
         </div>
         {% endif %}
+
     </div>
 
-    {% if plot_data and plot_data.type == 'tsp' %}
-    <div class="col-lg-4 mt-4 mt-lg-0">
-        <div class="card shadow-sm h-100">
-            <div class="card-header {{ current_badge_color }} text-white">
-                <i class="bi bi-geo-alt-fill"></i> Ruta
-            </div>
-            <div class="card-body p-0" style="overflow-y: auto;">
-                <table class="table table-sm table-hover mb-0">
-                    <thead class="table-light sticky-top">
-                        <tr class="small">
-                            <th>Orden</th>
-                            <th>Ciudad (x, y)</th>
-                        </tr>
-                    </thead>
-                    <tbody id="itinerary-body"></tbody>
-                </table>
-            </div>
-        </div>
+    {% if not problem == 'TSP' %}
+    </div>
     </div>
     {% endif %}
+
 </div>
 
-<div class="row mb-5">
-    <div class="col-12">
-        <div class="card shadow-sm">
-            <div class="card-header bg-dark text-white text-center">
-                <span class="bi bi-graph-up me-2 fw-bold">Gráfico de Convergencia</span>
-            </div>
-            <div class="card-body">
-                <div id="convergencePlot" class="plot-container"></div>
-            </div>
-        </div>
-    </div>
-</div>
 
-{% if algorithm == 'MFO' %}
-<div class="row mb-5">
-    <div class="col-12">
-        <div class="card shadow-sm border-0">
-            <div class="card-header bg-dark text-white text-center fw-bold">Mecanismo de Espiral (MFO)</div>
-            <div class="card-body p-0">
-                <div id="spiralPlot" class="plot-container" style="height: 400px;"></div>
-            </div>
-            <div class="card-footer small text-muted">
-                La espiral representa cómo la polilla se acerca a la flama usando la función:
-                \( D \cdot e^{bt} \cdot \cos(2\pi t) + Flame \)
-            </div>
-        </div>
-    </div>
-</div>
-{% endif %}
+
 
 <div class="text-center mb-5">
     <a href="/" class="btn btn-outline-dark px-5">Realizar Nueva Simulación</a>
@@ -541,25 +525,72 @@
     const generations = historyData.map(h => h.generation);
 
     // --- GRÁFICO PRINCIPAL (TSP / 1D / 2D) ---
-    {% if plot_data and plot_data.type == 'tsp' %}
+    {% if problem == 'TSP' %}
     const cities = {{ plot_data.cities| safe }};
     const lastSolution = historySolutions[historySolutions.length - 1];
     const routeIdx = [...Array(cities.length).keys()].sort((a, b) => lastSolution[a] - lastSolution[b]);
     const sortedCities = routeIdx.map(i => cities[i]);
 
     // Llenar tabla de itinerario
-    const tableBody = document.getElementById('itinerary-body');
-    if (tableBody) {
-        tableBody.innerHTML = sortedCities.map((city, index) => `
-                    <tr>
-                        <td style="width: 50px;">
-                            <span class="badge rounded-pill {{ current_badge_color }}" style="min-width: 25px;">${index + 1}</span>
-                        </td>
-                        <td class="font-monospace small">${city[0].toFixed(4)}, ${city[1].toFixed(4)}</td>
-                    </tr>
-                `).join('');
-    }
+// Llenar tabla de itinerario con estilo Premium
+const tableBody = document.getElementById('itinerary-body');
+if (tableBody) {
+    tableBody.innerHTML = sortedCities.map((city, index) => {
+        const isLast = index === sortedCities.length - 1;
+        const formatCoord = (num) => Number(num.toFixed(4));
 
+        return `
+            <tr>
+                <td class="text-center align-middle py-4" style="width: 20%;">
+                    <span class="text-muted small fw-bold">${index + 1}</span>
+                </td>
+
+                <td class="text-end align-middle py-4" style="width: 29%;">
+                    <span class="fs-5 text-dark font-monospace fw-bold">
+                        ${formatCoord(city[0])}
+                    </span>
+                </td>
+
+                <td class="text-center align-middle p-0" style="width: 2%; position: relative;">
+                    <div class="d-flex align-items-center justify-content-center h-100">
+                        <span class="fs-5 text-dark fw-bold" style="z-index: 11;">,</span>
+                        
+                        ${!isLast ? `
+                            <div style="
+                                position: absolute; 
+                                bottom: -12px; 
+                                left: 50%; 
+                                transform: translateX(-50%); 
+                                z-index: 10; 
+                                background: white; 
+                                border-radius: 50%; 
+                                width: 22px; 
+                                height: 22px; 
+                                display: flex; 
+                                align-items: center; 
+                                justify-content: center; 
+                                border: 1px solid #dee2e6;
+                                box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+                            ">
+                                <i class="bi bi-arrow-down text-primary" style="font-size: 0.7rem;"></i>
+                            </div>
+                        ` : ''}
+                    </div>
+                </td>
+
+                <td class="text-start align-middle py-4" style="width: 29%;">
+                    <span class="fs-5 text-dark font-monospace fw-bold">
+                        ${formatCoord(city[1])}
+                    </span>
+                </td>
+
+                <td class="text-center align-middle py-4" style="width: 20%;">
+                    <i class="bi ${isLast ? 'bi-flag-fill text-danger' : 'bi-geo-alt text-primary opacity-25'} fs-5"></i>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
     const plotCities = [...sortedCities, sortedCities[0]];
     const traceRoute = {
         x: plotCities.map(c => c[0]),
@@ -576,10 +607,10 @@
     // Se eliminaron los espacios extras en las llaves de Jinja
     const traceFunc = {
         x: {{ plot_data.x | safe }},
-        y: {{ plot_data.y | safe }},
-        type: 'scatter',
+    y: {{ plot_data.y | safe }},
+    type: 'scatter',
         mode: 'lines',
-        name: 'Función' 
+            name: 'Función' 
     };
     const traceHist = {
         x: historySolutions.map(s => Array.isArray(s) ? s[0] : s),
@@ -601,12 +632,12 @@
     {% elif dim == 2 %}
     const traceSurface = {
         x: {{ plot_data.x | safe }},
-        y: {{ plot_data.y | safe }}, // Estaba como { { ... } }
-        z: {{ plot_data.z | safe }}, // Estaba como { { ... } }
-        type: 'surface',
+    y: {{ plot_data.y | safe }}, // Estaba como { { ... } }
+    z: {{ plot_data.z | safe }}, // Estaba como { { ... } }
+    type: 'surface',
         colorscale: 'Viridis',
-        showscale: false,
-        opacity: 0.8
+            showscale: false,
+                opacity: 0.8
     };
 
     const traceHist2D = {
@@ -718,7 +749,6 @@
 
     const spiralLayout = {
         ...commonLayout,
-        title: 'Mecánica de Movimiento Espiral',
         // Cambia esto en tu spiralLayout:
         xaxis: {
             visible: false,
@@ -784,38 +814,46 @@
         rows.forEach(row => tbody.appendChild(row));
     }
 
+function toggleTableExpand(cardId, iconId, contractHeight = '60vh', expandHeight = '110vh') {
+    const card = document.getElementById(cardId);
+    const icon = document.getElementById(iconId);
+    if (!card || !icon) return;
 
-    function toggleTableExpand(cardId, iconId) {
-        const card = document.getElementById(cardId);
-        const icon = document.getElementById(iconId);
+    const isExpanded = card.getAttribute('data-expanded') === 'true';
 
-        if (!card || !icon) return;
-
-        // Check if it's currently at its restricted height
-        if (card.style.maxHeight === '520px') {
-            // Expand: Set to a high enough pixel value to cover the whole table
-            // This allows the CSS transition to actually animate!
-            card.style.maxHeight = '3000px';
-
-            // Change the icon to contract
-            icon.classList.remove('bi-arrows-angle-expand');
-            icon.classList.add('bi-arrows-angle-contract');
-        } else {
-            // Contract: Bring it back down to 500px
-            card.style.maxHeight = '500px';
-
-            // Change the icon back to expand
-            icon.classList.remove('bi-arrows-angle-contract');
-            icon.classList.add('bi-arrows-angle-expand');
-        }
+    if (!isExpanded) {
+        // EXPANDING: smoothly increase the ceiling to 110vh
+        card.style.maxHeight = expandHeight;
+        card.setAttribute('data-expanded', 'true');
+        icon.classList.replace('bi-arrows-angle-expand', 'bi-arrows-angle-contract');
+    } else {
+        // CONTRACTING: smoothly lower the ceiling back to 60vh
+        card.style.maxHeight = contractHeight;
+        card.setAttribute('data-expanded', 'false');
+        icon.classList.replace('bi-arrows-angle-contract', 'bi-arrows-angle-expand');
     }
+
+    // CRITICAL: Plotly needs a moment for the CSS transition to finish 
+    // before it recalculates its own size.
+    setTimeout(() => {
+        window.dispatchEvent(new Event('resize'));
+    }, 310);
+}
 
 </script>
 
 <style>
     .plot-container {
         width: 100%;
-        height: 500px;
+        /* 50% of the screen height instead of 50% of the parent */
+        height: 70vh; /* Safety net */
+        background-color: #fff;
+    }
+
+    .plot-container-tsp {
+        width: 100%;
+        /* 50% of the screen height instead of 50% of the parent */
+        height: 100%; /* Safety net */
         background-color: #fff;
     }
 
@@ -827,12 +865,6 @@
     .card-header {
         font-weight: bold;
         letter-spacing: 0.5px;
-    }
-
-    @media (max-width: 768px) {
-        .plot-container {
-            height: 350px;
-        }
     }
 
     /* Estilizamos el scroll de la tabla para que sea discreto */

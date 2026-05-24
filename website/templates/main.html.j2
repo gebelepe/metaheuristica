@@ -25,28 +25,27 @@
       </select>
     </div>
 
+  <div id="algorithm-params"></div>
+
 <div class="mb-4">
   <label class="form-label fw-bold"><i class="bi bi-layers-half"></i> Tipo de Problema</label>
   <select class="form-select form-select-lg border-primary shadow-sm" id="problem_type" name="problem_type" onchange="updateUIForProblemType(this.value)">
     <optgroup label="Optimización Matemática">
-      <option value="function">Función</option>
+      <option value="Func">Función</option>
     </optgroup>
             <optgroup label="Problemas Binarios">
-    <option value="knapsack">Knapsack</option>
+    <option value="KnS">Knapsack</option>
     </optgroup>
     <optgroup label="Problemas Combinatorios">
-          <option value="categorical">Job Scheduling (Categorico)</option>
-      <option value="tsp">Problema del Viajante (TSP)</option>
+          <option value="JobS">Job Scheduling (Categorico)</option>
+      <option value="TSP">Problema del Viajante (TSP)</option>
     </optgroup>
 
   </select>
-  <div id="problem-desc" class="form-text mt-2 text-primary">
-    Optimiza variables con valores reales dentro de un rango definido.
-  </div>
 </div>
 
 <div id="scheduling-problem-group" style="display:none;" class="mb-3">
-    <div class="card p-3 shadow-sm border-warning">
+    <div class="card p-3 shadow-sm border-jobs">
         <label class="form-label fw-bold"><i class="bi bi-clock-history"></i> Gestión de Tareas y Máquinas</label>
         
         <div class="input-group mb-3">
@@ -56,7 +55,7 @@
             <span class="input-group-text">Nº Tareas</span>
             <input type="number" id="taskCount" class="form-control" value="" min="1" max="100">
             
-            <button class="btn btn-warning text-dark" type="button" onclick="generateRandomScheduling()">
+            <button class="btn btn-jobs" type="button" onclick="generateRandomScheduling()">
                 <i class="bi bi-shuffle"></i> Generar Azar
             </button>
         </div>
@@ -83,16 +82,16 @@
     </div>
 
     <div class="mb-3 d-flex flex-wrap gap-2">
-      <button type="button" class="btn btn-outline-primary btn-sm" 
+      <button type="button" class="btn btn-func" 
               onclick="setFunction('x**2 + y**2')">Parabólica</button>
 
-      <button type="button" class="btn btn-outline-primary btn-sm" 
+      <button type="button" class="btn btn-func" 
               onclick="setFunction('(x**2 + 10*sin(x)) + (y**2 + 10*sin(y))')">Seno simple</button>
 
-      <button type="button" class="btn btn-outline-primary btn-sm" 
+      <button type="button" class="btn btn-func" 
               onclick="setFunction('20 + (x**2 - 10*cos(2*pi*x)) + (y**2 - 10*cos(2*pi*y))')">Rastrigin</button>
 
-      <button type="button" class="btn btn-outline-primary btn-sm" 
+      <button type="button" class="btn btn-func" 
               onclick="setFunction('1 + (x**2 + y**2)/4000 - cos(x/sqrt(1)) * cos(y/sqrt(2))')">Griewank</button>
     </div>
 
@@ -106,7 +105,7 @@
 </div>
 
 <div id="knapsack-problem-group" style="display:none;" class="mb-3">
-    <div class="card p-3 shadow-sm border-primary">
+    <div class="card p-3 shadow-sm border-kns">
         <label class="form-label fw-bold"><i class="bi bi-bag-fill"></i> Gestión de la Mochila</label>
         
         <div class="input-group mb-3">
@@ -116,7 +115,7 @@
             <span class="input-group-text">Nº Objetos</span>
             <input type="number" id="itemCount" class="form-control" value="" min="1" max="50">
             
-            <button class="btn btn-primary" type="button" onclick="generateRandomItems()">
+            <button class="btn btn-kns" type="button" onclick="generateRandomItems()">
                 <i class="bi bi-shuffle"></i> Generar Azar
             </button>
         </div>
@@ -133,13 +132,13 @@
 
 
   <div id="tsp-problem-group" style="display:none;" class="mb-3">
-    <div class="card p-3 shadow-sm border-info">
-      <label class="form-label fw-bold">Gestión de Ciudades</label>
+    <div class="card p-3 shadow-sm border-tsp">
+      <label class="form-label fw-bold text-tsp">Gestión de Ciudades</label>
       
       <div class="input-group mb-3">
         <span class="input-group-text">Nº de Ciudades</span>
-        <input type="number" id="randomCityCount" class="form-control" value="10" min="3" max="50">
-        <button class="btn btn-info text-white" type="button" onclick="generateRandomCities()">
+        <input type="number" id="randomCityCount" class="form-control" value="10" min="3">
+        <button class="btn btn-tsp" type="button" onclick="generateRandomCities()">
           <i class="bi bi-shuffle"></i> Generar Azar
         </button>
       </div>
@@ -175,7 +174,7 @@
   </div>
 
     <!-- Contenedor dinámico de parámetros -->
-    <div id="algorithm-params"></div>
+
 
     <!-- Botón enviar -->
     <div class="mb-3 text-center">
@@ -338,7 +337,6 @@ function updateUIForProblemType(type) {
     const schedulingGroup = document.getElementById('scheduling-problem-group');
     const mathGroup = document.getElementById('math-problem-group');
     const knapsackGroup = document.getElementById('knapsack-problem-group');
-    const desc = document.getElementById('problem-desc');
     const lbInput = document.getElementById('lb');
     const ubInput = document.getElementById('ub');
     const machineInput = document.getElementById('scheduling_machines');
@@ -361,28 +359,25 @@ function updateUIForProblemType(type) {
 
 
     // Lógica de límites (se oculta en Bits, Mochila y Scheduling)
-    if (type === 'knapsack' || type === 'categorical') {
+    if (type === 'KnS' || type === 'JobS') {
         limgroup.style.display = 'none';
     } else {
         limgroup.style.display = 'block';
     }
 
-    if (type === 'categorical') {
+    if (type === 'JobS') {
         schedulingGroup.style.display = 'block';
-        desc.innerHTML = "Asigna tareas a máquinas para minimizar el tiempo total (Makespan).";
         generateRandomScheduling()
     }
-    else if (type === 'function') {
+    else if (type === 'Func') {
         mathGroup.style.display = 'block';
-        desc.innerHTML = "Optimización de funciones reales.";
         lbInput.disabled = false;
         ubInput.disabled = false;
         lbInput.value = -5;
         ubInput.value = 5;
     } 
-    else if (type === 'knapsack') {
+    else if (type === 'KnS') {
         knapsackGroup.style.display = 'block';
-        desc.innerHTML = "Selecciona qué elementos llevar para maximizar el valor sin exceder el peso.";
         lbInput.value = 0;
         ubInput.value = 1;
         lbInput.disabled = true;
@@ -390,9 +385,8 @@ function updateUIForProblemType(type) {
         generateRandomItems()
 
     } 
-    else if (type === 'tsp') {
+    else if (type === 'TSP') {
         tspGroup.style.display = 'block';
-        desc.innerHTML = "Ruta más corta visitando ciudades.";
         lbInput.disabled = false;
         ubInput.value = 100;
         lbInput.value = 0;
@@ -555,6 +549,7 @@ function renderMath() {
     color: #6c757d;
     background-color: #f8f9fa;
 }
+
 </style>
 
 {% endblock %}

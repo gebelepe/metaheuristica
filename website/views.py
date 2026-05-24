@@ -264,7 +264,7 @@ def run_algorithm():
     mode = data.get('optimization_type', 'min')  
     
     # --- PHASE 1: PREPARE THE PROBLEM ---
-    if problem_type == 'tsp':
+    if problem_type == 'TSP':
         raw_cities = data.get('tsp_cities', '').strip().split('\n')
         cities = []
         limit_lb = float(data.get('lb', 0))
@@ -309,7 +309,7 @@ def run_algorithm():
         
         plot_data = {"type": "tsp", "cities": cities}
         
-    elif problem_type == 'knapsack':
+    elif problem_type == 'KnS':
         raw_items = data.get('knapsack_items', '').strip().split('\n')
         capacity = float(data.get('knapsack_capacity', 15))
         items = []
@@ -358,7 +358,7 @@ def run_algorithm():
         plot_data = {"type": "knapsack", "items_count": dim}
           
     
-    elif problem_type == 'categorical':       
+    elif problem_type == 'JobS':       
         raw_tasks = data.get('scheduling_tasks', '').strip().split('\n')
         num_machines = int(data.get('scheduling_machines', 3))
         
@@ -524,11 +524,11 @@ def run_algorithm():
     
     datos_scheduling = []
     
-    if problem_type == 'tsp':
-        latex_func = "Problema del Viajero"
-    elif problem_type == 'knapsack':
-        latex_func = f"Mochila (Capacidad: {data.get('knapsack_capacity')}kg)"    
-    elif problem_type == 'categorical':
+    if problem_type == 'TSP':
+        latex_func = None
+    elif problem_type == 'KnS':
+        latex_func = None
+    elif problem_type == 'JobS':
         seleccion_final = np.round(best_sol)
         
         # 1. Create exactly 'num_machines' empty lists inside datos_scheduling
@@ -544,11 +544,11 @@ def run_algorithm():
             time_total = sum(task[1] for task in machine) # Pythonic way to sum
             machine.insert(0, time_total)
             
-        latex_func = "Job Scheduling"
+        latex_func = None
     else:
         latex_func = f"f(x) = {latex(expr)}" if dim == 1 else f"f(x, y) = {latex(expr)}"
     datos_mochila = [[], 0]
-    if problem_type == 'knapsack':
+    if problem_type == 'KnS':
         seleccion_final = np.round(best_sol)
         peso_final = np.sum(seleccion_final * items[:, 1])
         
@@ -563,14 +563,14 @@ def run_algorithm():
         datos_mochila[1] = float(data.get('knapsack_capacity', 15))
     else:
         peso_final = None
-
     return render_template(
         'result.html.j2',
         algorithm=algo,
+        problem=problem_type,
         best_solution=list(best_sol),
         best_value=float(best_val),
         history=history,
-        function=latex_func, 
+        latex_function=latex_func, 
         dim=dim,
         plot_data=plot_data,
         params=params,
