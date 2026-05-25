@@ -68,20 +68,11 @@
         margin-right: auto;
         margin-left: auto;
     }
-        
-    @media (min-width: 768px) {
-    .main-responsive-container {
-        max-width: 70% !important;
-    }
-    }
+    @media (min-aspect-ratio: 16/9){
+        .main-responsive-container {
+        width: 70%;
+        }
 
-    .max-height-fixer {
-        max-height: fit-content;
-    }
-    @media (min-width: 576px) {
-    .max-height-fixer {
-        max-height: 0px;
-    }
     }
 
     

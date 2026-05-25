@@ -50,10 +50,10 @@
         
         <div class="input-group mb-3">
             <span class="input-group-text">Máquinas</span>
-            <input type="number" id="scheduling_machines" name="scheduling_machines" class="form-control" value="" min="1" max="20">
+            <input type="number" id="scheduling_machines" name="scheduling_machines" class="form-control" value="" min="1" max="100">
             
             <span class="input-group-text">Nº Tareas</span>
-            <input type="number" id="taskCount" class="form-control" value="" min="1" max="100">
+            <input type="number" id="taskCount" class="form-control" value="" min="1" max="1000">
             
             <button class="btn btn-jobs" type="button" onclick="generateRandomScheduling()">
                 <i class="bi bi-shuffle"></i> Generar Azar
@@ -113,7 +113,7 @@
             <input type="number" id="knapsack_capacity" name="knapsack_capacity" class="form-control" value="" min="1">
             
             <span class="input-group-text">Nº Objetos</span>
-            <input type="number" id="itemCount" class="form-control" value="" min="1" max="50">
+            <input type="number" id="itemCount" class="form-control" value="" min="1" max="1000">
             
             <button class="btn btn-kns" type="button" onclick="generateRandomItems()">
                 <i class="bi bi-shuffle"></i> Generar Azar
