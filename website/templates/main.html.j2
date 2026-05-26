@@ -37,7 +37,7 @@
     <option value="KnS">Knapsack</option>
     </optgroup>
     <optgroup label="Problemas Combinatorios">
-          <option value="JobS">Job Scheduling (Categorico)</option>
+          <option value="JobS">Job-Shop Problem Simplificado (JSP)</option>
       <option value="TSP">Problema del Viajante (TSP)</option>
     </optgroup>
 
@@ -47,7 +47,7 @@
 <div id="scheduling-problem-group" style="display:none;" class="mb-3">
     <div class="card p-3 shadow-sm border-jobs">
         <label class="form-label fw-bold"><i class="bi bi-clock-history"></i> Gestión de Tareas y Máquinas</label>
-        
+        <small class="text-muted">Simple refiere al Relaxed Job-Shop Problem, donde cada maquina puede hacer cualquier tarea y todas tienen la misma capacidad de procesamiento.</small>
         <div class="input-group mb-3">
             <span class="input-group-text">Máquinas</span>
             <input type="number" id="scheduling_machines" name="scheduling_machines" class="form-control" value="" min="1" max="100">
@@ -324,7 +324,7 @@ function generateRandomScheduling() {
     for (let i = 1; i <= taskCount; i++) {
         const nombreAleatorio = nombres[Math.floor(Math.random() * nombres.length)];
         const duracion = Math.floor(Math.random() * 41) + 5; // Duración entre 5 y 45
-        taskList.push(`${nombreAleatorio}_${i}, ${duracion}`);
+        taskList.push(`${nombreAleatorio} ${i}, ${duracion}`);
     }
 
     // 3. Insertar en el textarea
@@ -354,6 +354,8 @@ function updateUIForProblemType(type) {
     taskCountInput.value = null;
     itemCount.value = null;
     knapSackSize.value = null;
+    document.getElementById('optSwitch').checked = false;
+    document.getElementById('optSwitch').dispatchEvent(new Event('change'));
 
     // Dentro de updateUIForProblemType(type)...
 
@@ -382,6 +384,8 @@ function updateUIForProblemType(type) {
         ubInput.value = 1;
         lbInput.disabled = true;
         ubInput.disabled = true;
+        document.getElementById('optSwitch').checked = true;
+        document.getElementById('optSwitch').dispatchEvent(new Event('change'));
         generateRandomItems()
 
     } 

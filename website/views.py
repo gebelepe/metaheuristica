@@ -540,9 +540,15 @@ def run_algorithm():
             datos_scheduling[m_idx].append([nombres_tareas[i], duraciones[i]])  
             
         # 3. Calculate totals and insert them at index 0
+        total_time = 0
         for machine in datos_scheduling:
-            time_total = sum(task[1] for task in machine) # Pythonic way to sum
-            machine.insert(0, time_total)
+            machine_time = sum(task[1] for task in machine) # Pythonic way to sum
+            machine.insert(0, machine_time)
+            total_time+=machine_time
+        efficiency = (total_time / (best_val * num_machines) * 100)
+        datos_scheduling[0:0] = [total_time, efficiency, len(raw_tasks)]
+        
+        
             
         latex_func = None
     else:

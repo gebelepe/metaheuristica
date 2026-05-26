@@ -11,11 +11,11 @@
 <div class="main-responsive-container px-4 px-md-5 mt-3 mt-md-5 pt-3 pt-md-5">
 <div class="ultrawide-master-layout">
 <div class="ultrawide-left">
-<div class="ultrawide-left-inner">
-    <div class="row mb-5">
+<div class="ultrawide-left-inner" style="height:100%;">
+    <div class="row mb-5" style='height:100%'>
         
-        <div class="{{ 'col-lg-9' if problem == 'TSP' else 'col-12' }} d-flex flex-column" style="flex-grow: 1;">            
-            <div class="card shadow-sm" id="mainCard" style="height: 100%; width: 100%; overflow: hidden; display: flex; flex-direction: column; transition: max-height 0.3s ease-in-out;">
+        <div class="{{ 'col-lg-9' if problem == 'TSP' else 'col-12' }}  d-flex flex-column " style="flex-grow: 1;">            
+            <div class="card shadow-sm {{ 'tsp-card' if problem == 'TSP'}}" id="mainCard" style="width: 100%; overflow: hidden; display: flex; flex-direction: column; transition: max-height 0.3s ease-in-out;">
                 <div class="card-header {{ current_problem_color  }} d-flex justify-content-between align-items-center">
                     <i class="bi {{ current_problem_icon }} fs-4 me-2"></i>
 
@@ -24,7 +24,7 @@
                                 <span class="me-2 fw-bold">Contenido de la Mochila</span>
                             </div>
                             <button type="button" class="btn btn-sm text-white border-0 shadow-none"
-                                onclick="toggleTableExpand('mainCard', 'expandIconKnapsack', '600px')"
+                                onclick="toggleTableExpand('mainCard', 'expandIconKnapsack')"
                                 style="background-color: rgba(255, 255, 255, 0.2);">
                                 <i class="bi bi-arrows-angle-expand" id="expandIconKnapsack"></i>
                             </button>
@@ -41,13 +41,13 @@
                                             onclick="sortTable('knapsack-body', 1, 'str', this)">
                                             Ítem <i class="bi bi-arrow-down-up ms-1"></i>
                                         </th>
-                                        <th class="text-end" style="cursor: pointer;"
+                                        <th class="text-center" style="cursor: pointer;"
                                             onclick="sortTable('knapsack-body', 2, 'num', this)">
-                                            Peso <i class="bi bi-arrow-down-up ms-1"></i>
+                                            Peso<i class="bi bi-arrow-down-up ms-1"></i>
                                         </th>
-                                        <th class="text-end" style="cursor: pointer;"
+                                        <th class="text-center" style="cursor: pointer;"
                                             onclick="sortTable('knapsack-body', 3, 'num', this)">
-                                            Valor <i class="bi bi-arrow-down-up ms-1"></i>
+                                            Valor<i class="bi bi-arrow-down-up ms-1"></i>
                                         </th>
                                     </tr>
                                 </thead>
@@ -55,18 +55,14 @@
                                     <tr>
                                         <td class="text-center" data-sort="{{ '1' if item.seleccion else '0' }}">
                                             {% if item.seleccion %}
-                                            <span class="badge rounded-pill bg-success"><i
-                                                    class="bi bi-check-lg"></i></span>
+                                            <span class="badge rounded-pill bg-success"><i class="bi bi-check-lg"></i></span>
                                             {% else %}
-                                            <span class="badge rounded-pill bg-danger text-white"><i
-                                                    class="bi bi-x"></i></span>
+                                            <span class="badge rounded-pill bg-danger text-white"><i class="bi bi-x"></i></span>
                                             {% endif %}
                                         </td>
                                         <td><span class="fw-bold small">{{ item.nombre }}</span></td>
-                                        <td class="text-end font-monospace">{{ item.peso }}</td>
-                                        <td class="text-end font-monospace text-primary" data-sort="{{ item.valor }}">
-                                            ${{ item.valor }}
-                                        </td>
+                                        <td class="text-center">{{ "%g"|format(item.peso|round(1)) }}kg</td>
+                                        <td class="text-center text-primary" data-sort="{{ item.valor }}">${{ "%g"|format(item.valor|round(1))}}</td>
                                     </tr>
                                     {% endfor %}
                                 </tbody>
@@ -85,7 +81,7 @@
 
 
                             <button type="button" class="btn btn-jobs border-0 shadow-none"
-                                onclick="toggleTableExpand('mainCard', 'expandIcon', '50vh', )">
+                                onclick="toggleTableExpand('mainCard', 'expandIcon')">
 
                                 <i class="bi bi-arrows-angle-expand" id="expandIcon"></i>
 
@@ -95,14 +91,12 @@
 
                         <div class="bg-light p-3 border-bottom border-secondary-subtle" style="z-index: 2;">
 
-                            {% set ns_eff = namespace(total_time=0) %}
                             {% for m in scheduling_data %}
-                            {% set ns_eff.total_time = ns_eff.total_time + m[0] %}
+                            {% set total_time = scheduling_data[0] %}
                             {% endfor %}
-                            {% set num_machines = scheduling_data|length %}
-                            {% set efficiency = 0 %}
+                            {% set num_machines = scheduling_data|length - 2 %}
+                            {% set efficiency = scheduling_data[1] %}
                             {% if best_value > 0 and num_machines > 0 %}
-                            {% set efficiency = (ns_eff.total_time / (best_value * num_machines) * 100) | round(1) %}
                             {% endif %}
                             {% if efficiency <= 50 %} {% set hue=0 %} {% set lightness=efficiency * 0.9 %} {% else %} {%
                                 set hue=(efficiency - 50) * 2.4 %} {% set lightness=45 %} {% endif %} {% set
@@ -112,11 +106,7 @@
                                 <span class="small fw-bold text-muted"><i
                                         class="bi bi-lightning-charge-fill me-1"></i>Eficiencia de Balanceo</span>
 
-                                <span class="badge shadow-sm"
-                                    style="background-color: {{ dynamic_color }}; color: white;">{{
-                                    efficiency
-
-                                    }}%</span>
+                                <span class="badge shadow-sm"style="background-color: {{ dynamic_color }}; color: white;">{{"%g"|format(efficiency|round(1))}}%</span>
 
                         </div>
 
@@ -163,7 +153,7 @@
                                 </thead>
                                 <tbody id="scheduling-body">
                                     {% set ns = namespace(machine_num=0, cycler=0) %}
-                                    {% for machine in scheduling_data %}
+                                    {% for machine in scheduling_data[3:] %}
                                     <tr>
                                         {% set ns.machine_num = ns.machine_num + 1 %}
 
@@ -314,8 +304,10 @@
     </div>
     </div>
     {% endif %}
+
 </div>
-<div class="ultrawide-right mb-4">
+
+<div class="ultrawide-right mb-4" id="rightSide">
 {% if algorithm == 'MFO' %}
 <div class="mfo-widescreen-layout mb-4">
     
@@ -354,7 +346,7 @@
                                     {% if problem == 'KnS' and best_weight %}
                                     {{ best_weight|round(2) }} kg
                                     {% elif scheduling_data %}
-                                    {{ num_machines }}
+                                    {{ num_machines-1 }}
                                     {% else %}
                                     {{ dim }}
                                     {% endif %}
@@ -363,7 +355,11 @@
                             {% if scheduling_data %}
                             <tr>
                                 <th class="table-light fw-normal fs-6 text-secondary">Tareas</th>
-                                <td class="fw-bold">{{ scheduling_data|length }}</td>
+                                <td class="fw-bold">{{ scheduling_data[2] }}</td>
+                            </tr>
+                            <tr>
+                                <th class="table-light fw-normal fs-6 text-secondary">Eficiencia</th>
+                                <td class="fw-bold" style="color:{{dynamic_color}} !important">{{ "%g"|format(efficiency|round(1))}}%</td>
                             </tr>
                             {% elif problem == 'KnS' %}
                             <tr>
@@ -493,8 +489,8 @@
 
 {% else %}
 <div class="row mb-4">
-    <div class="col-12 col-lg-7 mb-4 mb-lg-0 d-flex flex-column">
-        <div class="card shadow-sm h-100"> 
+    <div class="col-12 col-lg-7 mb-4 mb-lg-0 d-flex flex-column" >
+        <div class="card shadow-sm h-100" > 
             <div class="card-body"> 
                 <div class="position-relative d-flex align-items-center mb-3">
                     <i class="bi bi-clipboard-data text-muted position-absolute start-0 fs-5"></i>
@@ -528,7 +524,7 @@
                                     {% if problem == 'KnS' and best_weight %}
                                     {{ best_weight|round(2) }} kg
                                     {% elif scheduling_data %}
-                                    {{ num_machines }}
+                                    {{ num_machines-1 }}
                                     {% else %}
                                     {{ dim }}
                                     {% endif %}
@@ -537,7 +533,11 @@
                             {% if scheduling_data %}
                             <tr>
                                 <th class="table-light fw-normal fs-6 text-secondary">Tareas</th>
-                                <td class="fw-bold">{{ scheduling_data|length }}</td>
+                                <td class="fw-bold">{{ scheduling_data[2] }}</td>
+                            </tr>
+                            <tr>
+                                <th class="table-light fw-normal fs-6 text-secondary">Eficiencia</th>
+                                <td class="fw-bold" style="color:{{dynamic_color}} !important">{{ "%g"|format(efficiency|round(1))}}%</td>
                             </tr>
                             {% elif problem == 'KnS' %}
                             <tr>
@@ -603,7 +603,7 @@
 <div class="row">
     <div class="col-12 d-flex flex-column">
         <div class="card shadow-sm h-100 d-flex flex-column">
-            <div class="card-body d-flex flex-column overflow-hidden">
+            <div class="card-body d-flex flex-column overflow-hidden" style="height:50vh;">
                 <div class="position-relative d-flex align-items-center mb-3">
                     <i class="bi bi-graph-down text-muted position-absolute start-0 fs-5"></i>
                     <h5 class="card-title text-muted m-0 fs-6 w-100 text-center">Convergencia</h5>
@@ -980,8 +980,8 @@ if (tableBody) {
         rows.forEach(row => tbody.appendChild(row));
     }
 
-function toggleTableExpand(cardId, iconId, contractHeight = '50%', expandHeight = '100%') {
-    // NEW: If we are in Ultrawide mode, exit the function immediately
+function toggleTableExpand(cardId, iconId, expandHeight = '100%') {
+    // 1. If we are in Ultrawide mode, exit the function immediately
     if (window.matchMedia("(min-aspect-ratio: 21/9)").matches) return;
 
     const card = document.getElementById(cardId);
@@ -991,15 +991,86 @@ function toggleTableExpand(cardId, iconId, contractHeight = '50%', expandHeight 
     const isExpanded = card.getAttribute('data-expanded') === 'true';
 
     if (!isExpanded) {
+        // --- EXPANDING ---
+        // Save the current inline max-height (or fallback to '400px' if empty) so we remember it
+        let currentHeight = card.style.maxHeight || '400px'; 
+        card.setAttribute('data-contract-height', currentHeight);
+
+        // Apply the new expanded height
         card.style.maxHeight = expandHeight;
         card.setAttribute('data-expanded', 'true');
         icon.classList.replace('bi-arrows-angle-expand', 'bi-arrows-angle-contract');
+        
     } else {
-        card.style.maxHeight = contractHeight;
+        // --- CONTRACTING ---
+        // Retrieve the height we saved earlier
+        let savedHeight = card.getAttribute('data-contract-height') || '400px';
+
+        // Revert back to the contracted height
+        card.style.maxHeight = savedHeight;
         card.setAttribute('data-expanded', 'false');
         icon.classList.replace('bi-arrows-angle-contract', 'bi-arrows-angle-expand');
     }
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+  const targetDiv = document.getElementById("rightSide");
+  const elementToResize = document.getElementById('mainCard');
+  let lastAppliedHeight = 0;
+  let resizeTimeout;
+
+  function matchHeights() {
+    let totalChildrenHeight = 0;
+    const children = Array.from(targetDiv.children);
+
+    // 1. Switch to highly precise fractional bounding box calculations
+    children.forEach(child => {
+      totalChildrenHeight += child.getBoundingClientRect().height;
+    });
+
+    // 2. Add layout gap metrics
+    const parentStyles = window.getComputedStyle(targetDiv);
+    const rowGap = parseFloat(parentStyles.rowGap) || parseFloat(parentStyles.gap) || 0;
+    if (children.length > 1) {
+      totalChildrenHeight += (rowGap * (children.length - 1));
+    }
+
+    // 3. MANUAL CALIBRATION OFFSET
+    // Adjust this number (positive or negative) to perfectly clear any extra space!
+    const manualOffset = -15.75; 
+    
+    const roundedHeight = Math.round(totalChildrenHeight + manualOffset);
+
+    // 4. Safely push updates
+    if (roundedHeight !== lastAppliedHeight && roundedHeight > 0) {
+      lastAppliedHeight = roundedHeight;
+      elementToResize.style.maxHeight = `${roundedHeight}px`;
+      targetDiv.style.maxHeight = `${roundedHeight}px`;
+    }
+  }
+
+  function debouncedMatch() {
+    clearTimeout(resizeTimeout);
+    resizeTimeout = setTimeout(() => {
+      matchHeights();
+    }, 50);
+  }
+
+  matchHeights();
+  window.addEventListener('load', matchHeights); 
+
+  const resizeObserver = new ResizeObserver(() => {
+    debouncedMatch();
+  });
+  
+  if (targetDiv) {
+    resizeObserver.observe(targetDiv);
+  }
+});
+
+
+
+
 
 </script>
 
@@ -1008,7 +1079,7 @@ function toggleTableExpand(cardId, iconId, contractHeight = '50%', expandHeight 
     flex-grow: 1;
     height: 100% !important;
     width: 100% !important;
-    min-height: 400px; /* Safety net so it doesn't get squashed too small */
+    min-height: 100%; /* Safety net so it doesn't get squashed too small */
 }
 
     .table th {
@@ -1052,22 +1123,15 @@ function toggleTableExpand(cardId, iconId, contractHeight = '50%', expandHeight 
         .mfo-sidebar { grid-area: sidebar; }
         .mfo-main { grid-area: mfo; }
         .mfo-bottom { grid-area: bottom; }
+        .tsp-card{
+        aspect-ratio: 5 / 4 !important;
+    }
     }
     
-    
-    /* 1. Hide the expand buttons ONLY on Ultrawide */
-@media (min-aspect-ratio: 21/9) {
-    /* Target the buttons that call the toggle function */
-    button[onclick*="toggleTableExpand"] {
-        display: none !important;
+    .tsp-card{
+        aspect-ratio: 1/1;
     }
 
-    /* Force the cards to ignore JS-injected max-height on Ultrawide */
-    #mainCard, #tspRouteCard {
-        max-height: none !important; 
-        height: 100% !important;
-    }
-}
 
 /* 2. Your existing Fixer (Modified for better compatibility) */
 .max-height-fixer {
@@ -1076,15 +1140,7 @@ function toggleTableExpand(cardId, iconId, contractHeight = '50%', expandHeight 
     transition: all 0.3s ease-in-out;
 }
 
-@media (min-aspect-ratio: 21/9) {
-    .max-height-fixer {
-        /* Ultrawide: Ignore the 400px and the JS, just fill the card */
-        height: 0 !important; 
-        min-height: 0 !important;
-        flex-grow: 1 !important;
-    }
-}
-    
+ 
     /* Default stacking for normal screens */
 /* Default stacking for normal screens */
 .ultrawide-master-layout {
@@ -1107,7 +1163,7 @@ function toggleTableExpand(cardId, iconId, contractHeight = '50%', expandHeight 
         align-items: stretch; /* Forces both columns to match height */
     }
     
-.ultrawide-row {
+    .ultrawide-row {
         display: flex;
         align-items: stretch; /* Forces both columns to be equal height */
         position: relative;
@@ -1118,27 +1174,42 @@ function toggleTableExpand(cardId, iconId, contractHeight = '50%', expandHeight 
         min-height: 0;
     }
 
-    .ultrawide-left-inner {
-        /* This is the magic: it detaches the left side from 'height growth' */
-        position: absolute;
-        top: 0;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        display: flex;
-        flex-direction: column;
-        padding-right: 1rem; /* Match your grid gap */
+    .max-height-fixer {
+        /* Ultrawide: Ignore the 400px and the JS, just fill the card */
+        height:  !important; 
+        min-height: 0 !important;
+        flex-grow: 1 !important;
     }
-}
 
-    .ultrawide-right > .row { margin-bottom: 0 !important; }
-}ultrawide-right > .row { margin-bottom: 0 !important; }
-}
-@media (min-aspect-ratio: 21/9){
+        /* Target the buttons that call the toggle function */
+    button[onclick*="toggleTableExpand"] {
+        display: none !important;
+    }
+
+    /* Force the cards to ignore JS-injected max-height on Ultrawide */
+    #mainCard, #tspRouteCard {
+        max-height: 100%; 
+        height: 100%;
+    }
     .main-responsive-container {
         width:100%;
     }
+
+    .tsp-card{
+        aspect-ratio: auto;
+    }
+
+    /* .ultra-wide-table-fix{
+        position:absolute;
+    } */
 }
+
+    
+.ultrawide-right > .row { margin-bottom: 0 !important; }
+
+
+
+
 </style>
 
 
